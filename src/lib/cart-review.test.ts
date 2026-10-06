@@ -19,6 +19,7 @@ function product(overrides: Partial<Product> = {}): Product {
 
 function cartItem(overrides: Partial<CartItem> = {}): CartItem {
   return {
+    line_id: "line_1",
     product_id: "product_1",
     variant_id: "default",
     quantity: 1,

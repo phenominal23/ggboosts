@@ -63,15 +63,15 @@ export function useCart() {
   const updateQuantity = useCallback((item: CartItem, quantity: number) => {
     const client = getShoppexClient();
     if (quantity <= 0) {
-      client.removeFromCart(item.product_id, item.variant_id);
+      client.removeFromCart(item.line_id);
     } else {
-      client.updateCartItem(item.product_id, item.variant_id, { quantity });
+      client.updateCartItem(item.line_id, { quantity });
     }
     emitCartChanged();
   }, []);
 
   const removeItem = useCallback((item: CartItem) => {
-    getShoppexClient().removeFromCart(item.product_id, item.variant_id);
+    getShoppexClient().removeFromCart(item.line_id);
     emitCartChanged();
   }, []);
 

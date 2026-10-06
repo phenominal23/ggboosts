@@ -9,6 +9,8 @@ export type StorefrontConfig = {
     enabled: boolean;
   };
   apiBaseUrl: string;
+  /** Browser-safe Headless key (pk_live_…) for the /dashboard customer portal. Never put an shx_ secret key here. */
+  publishableKey: string;
   checkoutBaseUrl: string;
   customerPortal: {
     mode: CustomerPortalMode;
@@ -27,6 +29,7 @@ export const shoppexConfig: StorefrontConfig = {
         (process.env.NEXT_PUBLIC_SHOPPEX_SHOP_SLUG ?? "demo") === "demo"),
   },
   apiBaseUrl: process.env.NEXT_PUBLIC_SHOPPEX_API_URL ?? "https://api.shoppex.io",
+  publishableKey: process.env.NEXT_PUBLIC_SHOPPEX_PUBLISHABLE_KEY ?? "pk_live_L9k_qW2vDFHT64Zmktgqkj7oms30e9LS",
   checkoutBaseUrl: process.env.NEXT_PUBLIC_SHOPPEX_CHECKOUT_URL ?? "https://checkout.shoppex.io",
   customerPortal: {
     mode: "external-url",

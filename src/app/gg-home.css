@@ -24,9 +24,9 @@
   -webkit-font-smoothing: antialiased;
 }
 .lb *, .lb *::before, .lb *::after { box-sizing: border-box; }
-.lb a { color: inherit; text-decoration: none; }
-.lb button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-.lb h1, .lb h2, .lb h3, .lb p { margin: 0; }
+:where(.lb) a { color: inherit; text-decoration: none; }
+:where(.lb) button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+:where(.lb) :is(h1, h2, h3, p) { margin: 0; }
 .lb em { font-style: normal; color: var(--lime); }
 .lb :focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 8px; }
 
@@ -103,7 +103,7 @@ html:has(.lb) { scroll-padding-top: 0; }
 /* Sections */
 .lb-section { width: min(1200px, calc(100% - 48px)); margin: 0 auto; padding: 110px 0 0; scroll-margin-top: 0; }
 .lb-eyebrow { display: inline-block; color: var(--lime); font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
-.lb h2 { margin-top: 14px; font-size: clamp(34px, 4.6vw, 58px); line-height: 1.08; letter-spacing: -.035em; font-weight: 800; }
+:where(.lb) h2 { margin-top: 14px; font-size: clamp(34px, 4.6vw, 58px); line-height: 1.08; letter-spacing: -.035em; font-weight: 800; }
 .lb-head { max-width: 720px; margin: 0 auto 56px; text-align: center; }
 .lb-head p, .lb-sub { margin-top: 16px; color: var(--dim); font-size: 17px; line-height: 1.65; }
 .lb-sub { max-width: 470px; }

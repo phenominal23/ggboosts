@@ -87,19 +87,19 @@ export function CheckoutFlow() {
 
     for (const issue of review.issues) {
       if (issue.action === "remove") {
-        client.removeFromCart(issue.item.product_id, issue.item.variant_id);
+        client.removeFromCart(issue.item.line_id);
         continue;
       }
 
       if (issue.action === "update" && issue.nextQuantity) {
-        client.updateCartItem(issue.item.product_id, issue.item.variant_id, {
+        client.updateCartItem(issue.item.line_id, {
           quantity: issue.nextQuantity,
         });
         continue;
       }
 
       if (issue.action === "notice" && typeof issue.nextUnitPrice === "number") {
-        client.updateCartItem(issue.item.product_id, issue.item.variant_id, {
+        client.updateCartItem(issue.item.line_id, {
           price_data: { unit_price: issue.nextUnitPrice },
         });
       }
