@@ -1,0 +1,192 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import type { Product } from "@shoppexio/storefront";
+import { toast } from "sonner";
+import { GGNavigation } from "@/components/gg-navigation";
+import { ServerScene } from "@/components/server-scene";
+import { ArrowLeft, LockKeyhole, Zap } from "lucide-react";
+import { CartDrawer } from "@/components/cart-drawer";
+import { useCart } from "@/components/use-cart";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { shoppexConfig } from "@/lib/shoppex-config";
+import { loadProductData } from "@/lib/storefront-data";
+import {
+  formatStockLabel,
+  getMaxSelectableQuantity,
+  getProductImage,
+  getProductOptions,
+  getQuantityBounds,
+  getUnitPrice,
+  getVariantId,
+  isSoldOut,
+} from "@/lib/product-utils";
+
+type ProductDetailProps = {
+  slug: string;
+};
+
+export function ProductDetail({ slug }: ProductDetailProps) {
+  const router = useRouter();
+  const cart = useCart();
+  const [cartOpen, setCartOpen] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [variantId, setVariantId] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [message, setMessage] = useState<string | null>(null);
+  const [sample, setSample] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProduct() {
+      setLoading(true);
+      setProduct(null);
+      setVariantId("");
+      setQuantity(1);
+      setMessage(null);
+      const result = await loadProductData(slug);
+      if (cancelled) return;
+
+      if (!result.success) {
+        setProduct(null);
+        setVariantId("");
+        setQuantity(1);
+        setMessage(result.message);
+        setRelatedProducts(result.products);
+        setSample(result.sample);
+        setLoading(false);
+        return;
+      }
+
+      const requestedVariant = new URLSearchParams(window.location.search).get("variant");
+      const selectedVariantId = requestedVariant && getProductOptions(result.product).some(option => option.id === requestedVariant)
+        ? requestedVariant : getVariantId(result.product);
+      const selectedQuantity = getQuantityBounds(result.product, selectedVariantId).min;
+      setProduct(result.product);
+      setVariantId(selectedVariantId);
+      setQuantity(selectedQuantity);
+      setRelatedProducts(result.products);
+      setSample(result.sample);
+      setLoading(false);
+    }
+
+    void loadProduct().catch(() => {
+      if (!cancelled) { setMessage("This package could not be loaded. Please try again."); setLoading(false); }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  const imageUrl = getProductImage(product);
+  const bounds = product ? getQuantityBounds(product, variantId) : { min: 1, max: -1 };
+  const soldOut = product ? isSoldOut(product, variantId) : false;
+  const productOptions = useMemo(() => product ? getProductOptions(product) : [], [product]);
+  const maxSelectableQuantity = product ? getMaxSelectableQuantity(product, variantId) : 0;
+  const hasSelectableQuantity = maxSelectableQuantity >= bounds.min;
+  const canIncrease = product ? !soldOut && quantity < maxSelectableQuantity : false;
+  const price = useMemo(() => product ? getUnitPrice(product, variantId) : 0, [product, variantId]);
+  const cartProducts = useMemo(() => {
+    if (!product) return relatedProducts;
+    return [product, ...relatedProducts.filter((relatedProduct) => relatedProduct.uniqid !== product.uniqid)];
+  }, [product, relatedProducts]);
+
+  if (loading) {
+    return <main className="commerce-page"><GGNavigation/><div className="detail-shell"><div className="product-skeleton product-skeleton--wide" aria-label="Loading package" role="status" /></div></main>;
+  }
+
+  if (!product) {
+    return (
+      <main className="commerce-page"><GGNavigation/><div className="detail-shell">
+        <div className="error-panel">
+          <h1>Product unavailable</h1>
+          <p>{message ?? "This product could not be loaded."}</p>
+          <Link href="/">Back to products</Link>
+        </div></div>
+      </main>
+    );
+  }
+
+  const addToCart = () => {
+    if (shoppexConfig.checkoutMode === "buy-now") {
+      cart.clearCart();
+    }
+    cart.addProduct(product, variantId, quantity);
+    toast.success("Added to cart.");
+    if (shoppexConfig.checkoutMode === "buy-now") {
+      router.push("/checkout");
+      return;
+    }
+    setCartOpen(true);
+  };
+
+  return (
+    <main className="commerce-page">
+      <GGNavigation quantity={cart.totalQuantity} onCart={() => setCartOpen(true)} />
+      <div className="commerce-intro"><Link href="/#pricing"><ArrowLeft size={13}/> BACK TO PRICING</Link><span>GG / PACKAGE DETAILS</span></div>
+
+      <section className="product-detail">
+        <div className="product-detail__media">
+          {imageUrl ? <img src={imageUrl} alt={product.title} /> : <ServerScene compact />}
+        </div>
+
+        <div className="product-detail__content">
+          <Link href="/">Back to products</Link>
+          <span className="eyebrow">{sample ? "DEMO PRODUCT / PREVIEW ONLY" : "YOUR SERVER. YOUR SELECTION."}</span>
+          <h1>{product.title}</h1>
+          <p>{product.description?.replace(/<[^>]*>/g, "") || "Review your package options and continue through Shoppex checkout."}</p>
+
+          <div className="detail-price">
+            <strong>{new Intl.NumberFormat("en-US", { style: "currency", currency: product.currency }).format(price)}</strong>
+            {shoppexConfig.showStockCount ? (
+              <Badge className={soldOut ? "stock stock--sold-out" : "stock"} variant="outline">
+                {formatStockLabel(product, variantId)}
+              </Badge>
+            ) : null}
+          </div>
+
+          {productOptions.length > 0 ? (
+            <div className="field">
+              <span>Option</span>
+              <Select value={variantId} onValueChange={(value) => {
+                  setVariantId(value);
+                  setQuantity(getQuantityBounds(product, value).min);
+                }}>
+                <SelectTrigger className="store-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {productOptions.map((variant) => (
+                    <SelectItem value={variant.id} key={variant.id}>{variant.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
+
+          <div className="buy-row">
+            <div className="quantity-control quantity-control--large">
+              <Button type="button" variant="ghost" onClick={() => setQuantity(Math.max(bounds.min, quantity - 1))} aria-label="Decrease quantity">-</Button>
+              <span>{quantity}</span>
+              <Button type="button" variant="ghost" onClick={() => setQuantity(Math.min(maxSelectableQuantity, quantity + 1))} disabled={!canIncrease} aria-label="Increase quantity">+</Button>
+            </div>
+            <Button className="primary-action" type="button" disabled={soldOut || !hasSelectableQuantity} onClick={addToCart}>
+              {soldOut ? "Sold out" : !hasSelectableQuantity ? "Unavailable" : shoppexConfig.checkoutMode === "buy-now" ? "Buy now" : "Add to cart"}
+            </Button>
+          </div>
+          <div className="purchase-assurance"><LockKeyhole size={13}/> Stock and pricing checked before payment.</div>
+        </div>
+      </section>
+      <div className="commerce-bottom"><Zap size={13}/> GGBoosts / Your community, turned up.</div>
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} products={cartProducts} />
+    </main>
+  );
+}
