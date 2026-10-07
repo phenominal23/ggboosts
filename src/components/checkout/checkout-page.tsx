@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import Link from "next/link";
 import { assertAttribution, HeadlessCheckoutError } from "@shoppexio/checkout-js/headless";
 import type { CheckoutGatewayOption, CheckoutPaymentSession, CheckoutSessionView, StartPaymentSessionResult } from "@shoppexio/checkout-js/headless";
-import { buildStorefrontCustomFieldPayload, isStorefrontCheckboxCustomFieldValueChecked, validateStorefrontCustomFieldValue, type StorefrontCustomField } from "@shoppexio/storefront";
+import { buildStorefrontCustomFieldPayload, isStorefrontCheckboxCustomFieldValueChecked, normalizeStorefrontCustomFields, validateStorefrontCustomFieldValue, type Product, type StorefrontCustomField } from "@shoppexio/storefront";
 import { ArrowLeft, ArrowRight, Bitcoin, Check, CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Tag, Wallet, XCircle, Zap } from "lucide-react";
 import { GGMark } from "@/components/gg-navigation";
 import { DiscordIcon, ShoppexEmbed, SiteBackground } from "@/components/home/site-chrome";
@@ -12,7 +12,9 @@ import {
   FAILED, PAID, SITE_URL, WAITING, fieldsForLine, forgetSession, friendlyError, gatewayGroup, getCheckoutClient, isEmail, isSetupError, money, recallSession, rememberSession, revealAttribution, usableGateways,
 } from "@/components/checkout/checkout-client";
 import { AddressPanel, AttributionBadge, ManualPanel, SquarePanel, WaitingPanel } from "@/components/checkout/payment-panels";
+import { getCurrency, getUnitPrice, getVariant } from "@/lib/product-utils";
 import { shoppexConfig } from "@/lib/shoppex-config";
+import { loadStorefrontData } from "@/lib/storefront-data";
 import { site } from "@/lib/site-content";
 
 type Phase =
@@ -20,6 +22,7 @@ type Phase =
   | { name: "no-product" }
   | { name: "fallback"; product: string; variant?: string; priceVariant: boolean }
   | { name: "error"; message: string }
+  | { name: "details" }
   | { name: "form" }
   | { name: "pay"; payment: CheckoutPaymentSession }
   | { name: "waiting" }
@@ -69,6 +72,7 @@ export function CheckoutPage() {
   const [couponOpen, setCouponOpen] = useState(false);
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [debug, setDebug] = useState(false);
+  const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean } | null>(null);
   const started = useRef(false);
 
   const client = getCheckoutClient();
@@ -99,20 +103,16 @@ export function CheckoutPage() {
           return;
         }
         if (!product) { setPhase({ name: "no-product" }); return; }
-        const origin = window.location.origin;
-        const v = await client.createSession({
-          product_id: product, variant_id: variant, quantity: 1,
-          return_url: `${origin}/checkout?return=1`, cancel_url: `${origin}/products`,
-        });
-        rememberSession(v.id);
-        setView(v);
-        // Pre-fill any default field values from Shoppex.
+        // Shoppex checks the product's required fields (invite link etc.) when the checkout is created,
+        // so read the field list from the catalog and collect it before creating anything.
+        const data = await loadStorefrontData();
+        const found = data.success ? data.products.find(x => x.uniqid === product) : undefined;
+        if (!found) { setPhase({ name: "error", message: "We couldn't find that plan. It may have changed — please pick it again from the plans page." }); return; }
+        setPlan({ product: found, variant, priceVariant });
         const defaults: Record<string, string> = {};
-        fieldsForLine(v).forEach(f => { if (f.defaultValue) defaults[f.name] = f.defaultValue; });
+        normalizeStorefrontCustomFields(found.custom_fields).forEach(f => { if (f.defaultValue) defaults[f.name] = f.defaultValue; });
         setValues(defaults);
-        const gws = usableGateways(v);
-        if (gws.length === 1) setMethod(gws[0].gateway);
-        setPhase({ name: "form" });
+        setPhase({ name: "details" });
       } catch (e) {
         if (product && isSetupError(e)) { setPhase({ name: "fallback", product, variant, priceVariant }); return; }
         setPhase({ name: "error", message: friendlyError(e) });
@@ -138,7 +138,8 @@ export function CheckoutPage() {
     return () => { stop = true; window.clearInterval(t); };
   }, [pollId, client, finish]);
 
-  const fields = useMemo(() => (view ? fieldsForLine(view) : []), [view]);
+  const planFields = useMemo(() => (plan ? normalizeStorefrontCustomFields(plan.product.custom_fields) : []), [plan]);
+  const fields = useMemo(() => (planFields.length ? planFields : view ? fieldsForLine(view) : []), [planFields, view]);
   const gateways = useMemo(() => (view ? usableGateways(view) : []), [view]);
   const selected = gateways.find(g => g.gateway === method) ?? null;
   const line = view?.line_items[0];
@@ -146,34 +147,69 @@ export function CheckoutPage() {
   const needsConsent = !!view && view.withdrawal_consent.required && !view.withdrawal_consent.recorded_at;
   const needsBilling = !!view && !!selected?.requirements.billing_address && !view.buyer.billing_address_complete;
 
-  function validate() {
-    const next: Record<string, string> = {};
-    if (!isEmail(email)) next.email = "Enter a valid email — your receipt and order link go here.";
-    fields.forEach(f => {
-      const msg = validateStorefrontCustomFieldValue(f, values[f.name] ?? "");
-      if (msg) next[`f:${f.name}`] = f.type === "checkbox" ? "Please tick this box to continue." : f.name.toLowerCase().includes("invite") && msg.includes("format") ? "That doesn't look like a Discord invite link (discord.gg/…)." : msg;
-    });
-    if (needsTerms && !terms) next.terms = "Please accept the terms to continue.";
-    if (needsConsent && !consent) next.consent = "Please tick this box to continue.";
-    if (needsBilling) (["name", "line1", "city", "country", "postal_code"] as const).forEach(k => { if (!billing[k].trim()) next[`b:${k}`] = "Required"; });
-    if (!method) next.method = "Choose how you'd like to pay.";
+  function showErrors(next: Record<string, string>) {
     setErrors(next);
     const first = Object.keys(next)[0];
     if (first) document.querySelector<HTMLElement>(`[data-err="${CSS.escape(first)}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
     return !first;
   }
 
+  function validateDetails() {
+    const next: Record<string, string> = {};
+    if (!isEmail(email)) next.email = "Enter a valid email — your receipt and order link go here.";
+    fields.forEach(f => {
+      const msg = validateStorefrontCustomFieldValue(f, values[f.name] ?? "");
+      if (msg) next[`f:${f.name}`] = f.type === "checkbox" ? "Please tick this box to continue." : f.name.toLowerCase().includes("invite") && msg.includes("format") ? "That doesn't look like a Discord invite link (discord.gg/…)." : msg;
+    });
+    return showErrors(next);
+  }
+
+  // Step 1 → 2: create the Shoppex checkout with the buyer's details attached.
+  async function createCheckout() {
+    if (!plan || busy || !validateDetails()) return;
+    setBusy(true); setFormError(null);
+    try {
+      const origin = window.location.origin;
+      const v = await client.createSession({
+        product_id: plan.product.uniqid, variant_id: plan.variant, quantity: 1, email: email.trim(),
+        custom_fields: buildStorefrontCustomFieldPayload(fields, values),
+        return_url: `${origin}/checkout?return=1`, cancel_url: `${origin}/products`,
+      });
+      rememberSession(v.id);
+      setView(v);
+      const gws = usableGateways(v);
+      if (gws.length === 1) setMethod(gws[0].gateway);
+      setPhase({ name: "form" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      if (isSetupError(e)) { setPhase({ name: "fallback", product: plan.product.uniqid, variant: plan.variant, priceVariant: plan.priceVariant }); return; }
+      setFormError(friendlyError(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function validate() {
+    const next: Record<string, string> = {};
+    if (needsTerms && !terms) next.terms = "Please accept the terms to continue.";
+    if (needsConsent && !consent) next.consent = "Please tick this box to continue.";
+    if (needsBilling) (["name", "line1", "city", "country", "postal_code"] as const).forEach(k => { if (!billing[k].trim()) next[`b:${k}`] = "Required"; });
+    if (!method) next.method = "Choose how you'd like to pay.";
+    return showErrors(next);
+  }
+
   async function startPayment() {
     if (!view || busy || !validate() || !method) return;
     setBusy(true); setFormError(null);
     try {
-      const lineKey = line?.line_item_id ?? line?.product_id ?? "";
-      let v = await client.updateSession(view.id, {
-        email: email.trim(),
-        ...(needsTerms ? { payment_method_terms_accepted: true } : {}),
-        ...(fields.length && lineKey ? { custom_fields: { [lineKey]: buildStorefrontCustomFieldPayload(fields, values) } } : {}),
-        ...(needsBilling ? { billing_address: { ...billing, country: billing.country.trim().toUpperCase() } } : {}),
-      });
+      let v = view;
+      if (needsTerms || needsBilling || (email.trim() && !view.buyer.email.persisted)) {
+        v = await client.updateSession(view.id, {
+          ...(email.trim() && !view.buyer.email.persisted ? { email: email.trim() } : {}),
+          ...(needsTerms ? { payment_method_terms_accepted: true } : {}),
+          ...(needsBilling ? { billing_address: { ...billing, country: billing.country.trim().toUpperCase() } } : {}),
+        });
+      }
       if (needsConsent) v = await client.recordWithdrawalConsent(v.id, v.withdrawal_consent.text_version);
       setView(v);
       if (!v.payment_required) {
@@ -260,7 +296,7 @@ export function CheckoutPage() {
     );
   }
 
-  if (phase.name === "error" || !view) return shell(
+  if (phase.name === "error" || (!view && phase.name !== "details")) return shell(
     <div className="co-state co-state--bad">
       <XCircle size={28} />
       <h1>Checkout couldn't load</h1>
@@ -272,7 +308,7 @@ export function CheckoutPage() {
     </div>,
   );
 
-  if (phase.name === "done") return shell(
+  if (phase.name === "done" && view) return shell(
     <div className="co-state co-state--ok">
       <CheckCircle2 size={44} />
       <h1>Payment received — you&apos;re all set</h1>
@@ -285,25 +321,32 @@ export function CheckoutPage() {
     </div>,
   );
 
+  // Order summary: Shoppex's numbers once the checkout exists, catalog numbers before that.
+  const currency = view?.currency ?? getCurrency(plan?.product);
+  const planPrice = plan ? getUnitPrice(plan.product, plan.variant) : 0;
+  const rows = view
+    ? view.line_items.map((l, i) => ({ key: l.line_item_id ?? String(i), title: l.title, sub: l.variant_title, total: l.line_total }))
+    : plan ? [{ key: "plan", title: plan.product.title, sub: getVariant(plan.product, plan.variant)?.title ?? null, total: String(planPrice) }] : [];
+  const totalNow = view ? view.breakdown.total : String(planPrice);
   const summary = (
     <aside className="co-summary" aria-label="Order summary">
       <span className="co-label">Your order</span>
-      {view.line_items.map((l, i) => (
-        <div key={l.line_item_id ?? i} className="co-item">
+      {rows.map(r => (
+        <div key={r.key} className="co-item">
           <div className="co-item__icon"><GGMark /></div>
           <div className="co-item__text">
-            <strong>{l.title}</strong>
-            {l.variant_title && <span>{l.variant_title}</span>}
+            <strong>{r.title}</strong>
+            {r.sub && <span>{r.sub}</span>}
           </div>
-          <b>{money(l.line_total, view.currency)}</b>
+          <b>{money(r.total, currency)}</b>
         </div>
       ))}
       <dl className="co-totals">
-        <div><dt>Subtotal</dt><dd>{money(view.breakdown.subtotal, view.currency)}</dd></div>
-        {view.breakdown.discount && Number(view.breakdown.discount) > 0 && <div className="co-totals__disc"><dt>Discount</dt><dd>−{money(view.breakdown.discount, view.currency)}</dd></div>}
-        {view.breakdown.tax && Number(view.breakdown.tax) > 0 && <div><dt>Tax</dt><dd>{money(view.breakdown.tax, view.currency)}</dd></div>}
-        {view.breakdown.fee && Number(view.breakdown.fee) > 0 && <div><dt>Processing fee</dt><dd>{money(view.breakdown.fee, view.currency)}</dd></div>}
-        <div className="co-totals__total"><dt>Total</dt><dd>{money(view.breakdown.total, view.currency)}</dd></div>
+        <div><dt>Subtotal</dt><dd>{money(view ? view.breakdown.subtotal : planPrice, currency)}</dd></div>
+        {view?.breakdown.discount && Number(view.breakdown.discount) > 0 && <div className="co-totals__disc"><dt>Discount</dt><dd>−{money(view.breakdown.discount, currency)}</dd></div>}
+        {view?.breakdown.tax && Number(view.breakdown.tax) > 0 && <div><dt>Tax</dt><dd>{money(view.breakdown.tax, currency)}</dd></div>}
+        {view?.breakdown.fee && Number(view.breakdown.fee) > 0 && <div><dt>Processing fee</dt><dd>{money(view.breakdown.fee, currency)}</dd></div>}
+        <div className="co-totals__total"><dt>Total</dt><dd>{money(totalNow, currency)}</dd></div>
       </dl>
       {phase.name === "form" && (
         couponOpen ? (
@@ -324,37 +367,12 @@ export function CheckoutPage() {
     </aside>
   );
 
-  // ---------- Pay step ----------
-  if (phase.name === "pay" || phase.name === "failed" || phase.name === "waiting") {
-    const p = phase.name === "pay" ? phase.payment : null;
-    let panel: React.ReactNode;
-    if (phase.name === "waiting") panel = <WaitingPanel />;
-    else if (phase.name === "failed") panel = <div className="co-pay"><p className="co-error" role="alert">{phase.message}</p></div>;
-    else if (p?.kind === "embed" && p.provider === "square") panel = <SquarePanel view={view} payment={p} email={email} onResult={r => handleStart(view, r)} />;
-    else if (p?.kind === "address") panel = <AddressPanel view={view} payment={p} />;
-    else if (p?.kind === "manual") panel = <ManualPanel payment={p} />;
-    else if (p?.kind === "final") panel = <WaitingPanel />;
-    else panel = <div className="co-pay"><p className="co-error">This payment method isn&apos;t available on this page yet. Please go back and pick another one.</p></div>;
-    return shell(
-      <div className="co-grid">
-        <section className="co-main">
-          <button type="button" className="co-back" onClick={() => { setPhase({ name: "form" }); setFormError(null); }}><ArrowLeft size={15} /> Change payment method</button>
-          <h1 className="co-h1">Complete your payment</h1>
-          <p className="co-muted">Paying with <b>{selected?.presentation.button_label ?? selected?.label ?? "your selected method"}</b> · receipt to {email}</p>
-          {panel}
-          <div className="co-attrib-row"><AttributionBadge attribution={view.attribution} /></div>
-        </section>
-        {summary}
-      </div>,
-    );
-  }
-
-  // ---------- Details + method step ----------
-  return shell(
+  // ---------- Step 1: details (no Shoppex checkout yet) ----------
+  if (phase.name === "details" || !view) return shell(
     <div className="co-grid">
-      <form className="co-main" noValidate onSubmit={e => { e.preventDefault(); void startPayment(); }}>
+      <form className="co-main" noValidate onSubmit={e => { e.preventDefault(); void createCheckout(); }}>
         <h1 className="co-h1">Checkout</h1>
-        <p className="co-muted">Tell us where to send your boosts, then choose how to pay.</p>
+        <p className="co-muted">Tell us where to send your boosts. You&apos;ll choose how to pay next.</p>
 
         <fieldset className="co-section">
           <legend><span>1</span> Contact</legend>
@@ -396,6 +414,50 @@ export function CheckoutPage() {
           </fieldset>
         )}
 
+        {formError && <p className="co-error" role="alert">{formError}</p>}
+        <button type="submit" className="lb-btn lb-btn--primary lb-btn--lg co-full" disabled={busy}>
+          {busy ? <><Loader2 size={17} className="co-spin" /> Saving…</> : <>Continue <ArrowRight size={17} /></>}
+        </button>
+        {debug && plan && <pre className="co-debug">{JSON.stringify({ product: plan.product.uniqid, variant: plan.variant, fields: plan.product.custom_fields }, null, 2)}</pre>}
+      </form>
+      {summary}
+    </div>,
+  );
+
+  // ---------- Step 3: pay ----------
+  if (phase.name === "pay" || phase.name === "failed" || phase.name === "waiting") {
+    const p = phase.name === "pay" ? phase.payment : null;
+    let panel: React.ReactNode;
+    if (phase.name === "waiting") panel = <WaitingPanel />;
+    else if (phase.name === "failed") panel = <div className="co-pay"><p className="co-error" role="alert">{phase.message}</p></div>;
+    else if (p?.kind === "embed" && p.provider === "square") panel = <SquarePanel view={view} payment={p} email={email} onResult={r => handleStart(view, r)} />;
+    else if (p?.kind === "address") panel = <AddressPanel view={view} payment={p} />;
+    else if (p?.kind === "manual") panel = <ManualPanel payment={p} />;
+    else if (p?.kind === "final") panel = <WaitingPanel />;
+    else panel = <div className="co-pay"><p className="co-error">This payment method isn&apos;t available on this page yet. Please go back and pick another one.</p></div>;
+    return shell(
+      <div className="co-grid">
+        <section className="co-main">
+          <button type="button" className="co-back" onClick={() => { setPhase({ name: "form" }); setFormError(null); }}><ArrowLeft size={15} /> Change payment method</button>
+          <h1 className="co-h1">Complete your payment</h1>
+          <p className="co-muted">Paying with <b>{selected?.presentation.button_label ?? selected?.label ?? "your selected method"}</b>{email && <> · receipt to {email}</>}</p>
+          {panel}
+          <div className="co-attrib-row"><AttributionBadge attribution={view.attribution} /></div>
+        </section>
+        {summary}
+      </div>,
+    );
+  }
+
+  // ---------- Step 2: payment method ----------
+  const invite = fields.find(f => f.name.toLowerCase().includes("invite"));
+  return shell(
+    <div className="co-grid">
+      <form className="co-main" noValidate onSubmit={e => { e.preventDefault(); void startPayment(); }}>
+        {plan && <button type="button" className="co-back" onClick={() => { setView(null); setMethod(null); setPhase({ name: "details" }); setFormError(null); }}><ArrowLeft size={15} /> Edit details</button>}
+        <h1 className="co-h1">Payment</h1>
+        {email && <p className="co-muted">Receipt to <b>{email}</b>{invite && values[invite.name] && <> · delivering to <b>{values[invite.name]}</b></>}</p>}
+
         <fieldset className="co-section">
           <legend><span>{fields.length > 0 ? 3 : 2}</span> Payment method</legend>
           {gateways.length === 0 && <p className="co-error">No payment methods are available right now. Please contact support.</p>}
@@ -406,7 +468,7 @@ export function CheckoutPage() {
                 <button key={g.gateway} type="button" role="radio" aria-checked={method === g.gateway} className={`co-method ${method === g.gateway ? "is-selected" : ""}`}
                   onClick={() => { setMethod(g.gateway); setErrors(x => ({ ...x, method: "" })); }}>
                   <span className="co-method__icon"><MethodIcon g={g} /></span>
-                  <span className="co-method__text"><strong>{g.presentation.button_label ?? g.label}</strong>{fee && <small>+{money(fee, view.currency)} fee</small>}</span>
+                  <span className="co-method__text"><strong>{g.presentation.button_label ?? g.label}</strong>{fee && <small>+{money(fee, currency)} fee</small>}</span>
                   <span className="co-method__radio">{method === g.gateway && <Check size={13} strokeWidth={3} />}</span>
                 </button>
               );
@@ -445,12 +507,12 @@ export function CheckoutPage() {
 
         {formError && <p className="co-error" role="alert">{formError}</p>}
         <button type="submit" className="lb-btn lb-btn--primary lb-btn--lg co-full" disabled={busy || gateways.length === 0}>
-          {busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : <>Continue to payment · {money(view.breakdown.total, view.currency)} <ArrowRight size={17} /></>}
+          {busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : <>Continue to payment · {money(view.breakdown.total, currency)} <ArrowRight size={17} /></>}
         </button>
         <div className="co-attrib-row"><AttributionBadge attribution={view.attribution} /></div>
 
         {debug && (
-          <pre className="co-debug">{JSON.stringify({ gateways: view.gateways_available, fields: line?.custom_fields_config, terms: view.terms, buyer: view.buyer, consent: view.withdrawal_consent }, null, 2)}</pre>
+          <pre className="co-debug">{JSON.stringify({ gateways: view.gateways_available, fields: line?.custom_fields_config, saved: line?.custom_fields, terms: view.terms, buyer: view.buyer, consent: view.withdrawal_consent }, null, 2)}</pre>
         )}
       </form>
       {summary}
