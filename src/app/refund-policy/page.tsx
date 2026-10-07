@@ -28,7 +28,7 @@ export default function RefundPage() {
       <p>Please contact us before opening a dispute with your bank or payment provider — most problems are fixed within minutes. Orders under an open chargeback may have their boosts removed.</p>
 
       <h2>How to request a refund</h2>
-      <p>Email <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a> or open a ticket in our Discord with your order ID and what went wrong.</p>
+      <p>Open a ticket in our <a href={site.supportUrl} target="_blank" rel="noreferrer">Discord</a> with your order ID and what went wrong.</p>
     </LegalPage>
   );
 }

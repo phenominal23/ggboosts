@@ -156,7 +156,7 @@ export function Footer() {
         </div>
         <nav aria-label="Shop"><h4>Shop</h4><Link href="/products">All Products</Link><Link href="/products">Lifetime Plans</Link><a href={getCustomerPortalHref()}>My Orders</a></nav>
         <nav aria-label="Help"><h4>Help</h4><a href="/#how-it-works">How It Works</a><a href="/#faq">FAQ</a><Link href="/products#products-faq">Product FAQ</Link></nav>
-        <nav aria-label="Contact"><h4>Contact</h4><a href={site.supportUrl} target="_blank" rel="noreferrer">Discord Support</a><a href={`mailto:${site.supportEmail}`}>Email Support</a></nav>
+        <nav aria-label="Contact"><h4>Contact</h4><a href={site.supportUrl} target="_blank" rel="noreferrer">Discord Support</a></nav>
       </div>
       <div className="lb-footer__legal">
         <span>© {new Date().getFullYear()} {site.name}. All rights reserved.</span>

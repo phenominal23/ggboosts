@@ -130,7 +130,7 @@
 .co-accept .co-coin + .co-coin { margin-left: -7px; }
 
 .co-help { padding: 18px 22px 20px; }
-.co-help__btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.co-help__btn { width: 100%; margin-top: 14px; }
 .co-help__btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border: 1px solid var(--line-2); border-radius: 10px; background: #ffffff06; color: var(--text); font-size: 13.5px; font-weight: 600; transition: filter .15s, background .15s; }
 .co-help__btn:hover { background: #ffffff0f; }
 .co-help__btn--discord { border-color: transparent; background: var(--discord); }

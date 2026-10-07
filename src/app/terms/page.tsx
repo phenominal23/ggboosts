@@ -45,7 +45,7 @@ export default function TermsPage() {
       <p>These Terms are governed by the laws of {legal.governingLaw}.</p>
 
       <h2>12. Contact</h2>
-      <p>Questions? Email <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a> or open a ticket in our <a href={site.supportUrl} target="_blank" rel="noreferrer">Discord</a>.</p>
+      <p>Questions? Open a ticket in our <a href={site.supportUrl} target="_blank" rel="noreferrer">Discord</a>.</p>
     </LegalPage>
   );
 }

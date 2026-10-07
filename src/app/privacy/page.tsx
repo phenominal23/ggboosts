@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       <ul>
         <li><strong>Order details:</strong> your email address, the products you buy, the amount paid and your order ID.</li>
         <li><strong>Server details:</strong> the Discord invite link you provide at checkout, needed to deliver your boosts.</li>
-        <li><strong>Support messages:</strong> anything you send us by email or Discord.</li>
+        <li><strong>Support messages:</strong> anything you send us on Discord.</li>
       </ul>
       <p>We never ask for your Discord password, email login, token or 2FA codes.</p>
 
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
       <p>We keep order records for as long as your plan&apos;s warranty applies and as required for accounting, tax and fraud prevention.</p>
 
       <h2>Your choices</h2>
-      <p>You can ask us to show you, correct or delete the information we hold about you, unless we must keep it for legal reasons. Email <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a>.</p>
+      <p>You can ask us to show you, correct or delete the information we hold about you, unless we must keep it for legal reasons. Open a ticket in our <a href={site.supportUrl} target="_blank" rel="noreferrer">Discord</a>.</p>
 
       <h2>Changes</h2>
       <p>We may update this policy. The date at the top shows the latest version.</p>

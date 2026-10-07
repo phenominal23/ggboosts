@@ -4,7 +4,6 @@
 export const site = {
   name: "GGBoosts",
   supportUrl: "https://discord.gg/your-invite", // TODO: your support server invite
-  supportEmail: "support@ggboosts.com", // TODO: your support email
 };
 
 export const hero = {

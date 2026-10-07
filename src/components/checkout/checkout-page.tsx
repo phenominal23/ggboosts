@@ -5,7 +5,7 @@ import Link from "next/link";
 import { assertAttribution, HeadlessCheckoutError } from "@shoppexio/checkout-js/headless";
 import type { CheckoutPaymentSession, CheckoutSessionView, StartPaymentSessionResult } from "@shoppexio/checkout-js/headless";
 import { buildStorefrontCustomFieldPayload, isStorefrontCheckboxCustomFieldValueChecked, normalizeStorefrontCustomFields, validateStorefrontCustomFieldValue, type Product, type StorefrontCustomField } from "@shoppexio/storefront";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Loader2, Lock, Mail, XCircle, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Loader2, Lock, XCircle, Zap } from "lucide-react";
 import { GGMark } from "@/components/gg-navigation";
 import { DiscordIcon, ShoppexEmbed, SiteBackground } from "@/components/home/site-chrome";
 import {
@@ -378,11 +378,8 @@ export function CheckoutPage() {
       </section>
       <section className="co-card co-help">
         <h2>Need help?</h2>
-        <p>We&apos;re on Discord before and after you pay.</p>
-        <div className="co-help__btns">
-          <a className="co-help__btn co-help__btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord</a>
-          <a className="co-help__btn" href={`mailto:${site.supportEmail}`}><Mail size={15} /> Email</a>
-        </div>
+        <p>Open a ticket in our Discord — before or after you pay.</p>
+        <a className="co-help__btn co-help__btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Get help on Discord</a>
       </section>
     </aside>
   );
