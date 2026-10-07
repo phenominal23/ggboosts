@@ -23,7 +23,7 @@ function activeLabel(duration: number) {
 
 const tabIcons: Record<CategoryId, typeof Rocket> = { boosts: Rocket, nitro: Gem, accounts: UserRound, members: Users };
 
-export function Pricing({ products = [], offers, status, demo, onRetry, showHead = true }: { products?: Product[]; offers: BoostOffer[]; status: Status; demo: boolean; onRetry: () => void; showHead?: boolean }) {
+export function Pricing({ products = [], offers, status, demo, onRetry, showHead = true, only }: { products?: Product[]; only?: CategoryId; offers: BoostOffer[]; status: Status; demo: boolean; onRetry: () => void; showHead?: boolean }) {
   const available = DURATIONS.filter(d => offers.some(o => o.duration === d));
   const [picked, setPicked] = useState<number | null>(null);
   const [tab, setTab] = useState<CategoryId>("boosts");
@@ -37,7 +37,7 @@ export function Pricing({ products = [], offers, status, demo, onRetry, showHead
     return map;
   }, [products]);
   const tabs = CATEGORIES.filter(c => c.id === "boosts" || grouped.has(c.id));
-  const current = tabs.some(t => t.id === tab) ? tab : "boosts";
+  const current = only ?? (tabs.some(t => t.id === tab) ? tab : "boosts");
   const duration = picked !== null && (status !== "ready" || available.includes(picked)) ? picked : available[0] ?? 1;
 
   return (
@@ -51,18 +51,20 @@ export function Pricing({ products = [], offers, status, demo, onRetry, showHead
         </header>
       ) : demo ? <div className="lb-center lb-center--flag"><span className="lb-demo-flag">Demo prices — connect your Shoppex store to show real pricing</span></div> : null}
 
-      <div className="lb-cats" role="tablist" aria-label="Product category" data-reveal>
+      {!only && <div className="lb-cats" role="tablist" aria-label="Product category" data-reveal>
         {tabs.map(c => {
           const Icon = tabIcons[c.id];
           return <button key={c.id} type="button" role="tab" aria-selected={current === c.id} onClick={e => { setTab(c.id); e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" }); }}><Icon size={16} /> {c.label}</button>;
         })}
-      </div>
+      </div>}
 
       {status === "error" ? (
         <div className="lb-error"><p>We couldn't load pricing right now.</p><button type="button" className="lb-btn lb-btn--ghost" onClick={onRetry}><RotateCw size={15} /> Try again</button></div>
       ) : current !== "boosts" ? (
-        <div className="lb-items" key={current}>
-          {(grouped.get(current) ?? []).map(p => <ItemCard key={p.uniqid} product={p} category={current} demo={demo} />)}
+        <div className="lb-items" key={current} aria-busy={status === "loading"}>
+          {status === "loading" ? [0, 1, 2].map(i => <div key={i} className="lb-card lb-item"><span className="lb-skeleton" /></div>)
+            : (grouped.get(current) ?? []).map(p => <ItemCard key={p.uniqid} product={p} category={current} demo={demo} />)}
+          {status === "ready" && !grouped.get(current)?.length && <p className="lb-error">Nothing here right now — check back soon or ask in our Discord.</p>}
         </div>
       ) : (
         <div className="lb-pricing" data-reveal>

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import type { CSSProperties, ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { themeConfig } from "@/lib/theme-config";
+import { JsonLd } from "@/components/seo/json-ld";
+import { organizationJsonLd, SITE_URL, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 import "./gg-v2.css";
 import "./gg-home.css";
@@ -11,10 +13,10 @@ import "./gg-checkout.css";
 
 
 export const metadata: Metadata = {
-  // Absolute base for share-image links. On Vercel this falls back to the production domain automatically.
-  ...(process.env.NEXT_PUBLIC_SITE_URL ? { metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL) } : {}),
-  title: "GGBoosts – Cheap Discord Server Boosts | Automated Delivery",
-  description: themeConfig.tagline,
+  // Absolute base for canonical and share-image links.
+  metadataBase: new URL(SITE_URL),
+  title: { default: "GGBoosts – Cheap Discord Server Boosts | Level 3 for Less", template: "%s | GGBoosts" },
+  description: "Buy Discord server boosts with a one-time payment — 8, 14, 20 or 30 boosts, monthly to lifetime. No Discord login needed, warranty included. Plus members, aged accounts and Nitro.",
   openGraph: {
     title: "GGBoosts – Cheap Discord Server Boosts",
     description: "Level 3 for your server without the Nitro price. Automated delivery, warranty included, no Discord login required.",
@@ -59,6 +61,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body style={themeStyle}>
+        <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
         {children}
         <Toaster position="bottom-left" />
       </body>

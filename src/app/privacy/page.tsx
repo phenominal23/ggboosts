@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
 import { legal, site } from "@/lib/site-content";
 
-export const metadata: Metadata = { title: "Privacy Policy | GGBoosts" };
+export const metadata: Metadata = { title: "Privacy Policy" };
 
 export default function PrivacyPage() {
   return (

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/legal/legal-page";
 import { legal, site } from "@/lib/site-content";
 
-export const metadata: Metadata = { title: "Terms of Service | GGBoosts" };
+export const metadata: Metadata = { title: "Terms of Service" };
 
 export default function TermsPage() {
   return (

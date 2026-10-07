@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import type { Product } from "@shoppexio/storefront";
-import { ArrowRight, Menu, Plus, X } from "lucide-react";
+import { ArrowRight, BookOpen, ChevronDown, Gem as GemIcon, Layers, Link2, Menu, Plus, UserRound, Users, X } from "lucide-react";
 import { GGMark } from "@/components/gg-navigation";
 import { Gem } from "@/components/home/gem";
 import { PaymentLogo } from "@/components/home/payment-logos";
@@ -14,6 +14,7 @@ import { getBoostOffers } from "@/lib/boost-offers";
 import { getCustomerPortalHref } from "@/lib/shoppex-config";
 import { loadStorefrontData } from "@/lib/storefront-data";
 import { paymentLogos, site } from "@/lib/site-content";
+import { menuGuides } from "@/lib/guides";
 
 export function DiscordIcon({ size = 18 }: { size?: number }) {
   return (
@@ -69,7 +70,7 @@ export function SiteBackground() {
   return <div className="lb-bg" aria-hidden="true"><i className="lb-bg__a" /><i className="lb-bg__b" /><i className="lb-bg__grid" /></div>;
 }
 
-export function Nav({ active }: { active?: "products" }) {
+export function Nav({ active }: { active?: "products" | "guides" }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -82,6 +83,7 @@ export function Nav({ active }: { active?: "products" }) {
     { href: "/#features", label: "Features" },
     { href: "/products", label: "Products", key: "products" },
     ...(showReviews ? [{ href: "/#reviews", label: "Reviews" }] : []),
+    { href: "/guides", label: "Guides", key: "guides" },
     { href: "/#faq", label: "FAQ" },
     { href: getCustomerPortalHref(), label: "My Orders" },
   ];
@@ -89,7 +91,7 @@ export function Nav({ active }: { active?: "products" }) {
     <header className={`lb-nav ${scrolled ? "is-scrolled" : ""} ${open ? "is-open" : ""}`}>
       <Link className="lb-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
       <nav className="lb-nav__links" aria-label="Main">
-        {links.map(l => <a key={l.label} href={l.href} className={l.key && l.key === active ? "is-active" : ""} aria-current={l.key && l.key === active ? "page" : undefined}>{l.label}</a>)}
+        {links.map(l => l.key === "guides" ? <GuidesMenu key={l.label} active={active === "guides"} /> : <a key={l.label} href={l.href} className={l.key && l.key === active ? "is-active" : ""} aria-current={l.key && l.key === active ? "page" : undefined}>{l.label}</a>)}
       </nav>
       <a className="lb-btn lb-btn--discord lb-nav__cta" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord</a>
       <button className="lb-nav__toggle" type="button" aria-expanded={open} aria-controls="lb-mobile-nav" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20} /> : <Menu size={20} />}</button>
@@ -98,6 +100,40 @@ export function Nav({ active }: { active?: "products" }) {
         <a className="lb-btn lb-btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Join our Discord</a>
       </nav>
     </header>
+  );
+}
+
+// "Guides" in the top menu: click for the help center, hover (or tab into it) for the most useful guides.
+const menuIcons: Record<string, typeof Plus> = {
+  "discord-server-boost-levels": Layers,
+  "discord-nitro-vs-buying-server-boosts": GemIcon,
+  "online-vs-offline-discord-members": Users,
+  "aged-discord-accounts-explained": UserRound,
+  "how-to-make-a-permanent-discord-invite": Link2,
+};
+
+function GuidesMenu({ active }: { active: boolean }) {
+  return (
+    <div className="lb-dd">
+      <Link href="/guides" className={`lb-dd__trigger ${active ? "is-active" : ""}`} aria-haspopup="true">Guides <ChevronDown size={14} /></Link>
+      <div className="lb-dd__panel">
+        <span className="lb-dd__label">Guides</span>
+        <ul>
+          {menuGuides.map(m => {
+            const Icon = menuIcons[m.slug] ?? BookOpen;
+            return (
+              <li key={m.slug}>
+                <Link href={`/guides/${m.slug}`}>
+                  <span className="lb-dd__icon"><Icon size={17} /></span>
+                  <span><strong>{m.label}</strong><small>{m.hint}</small></span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        <Link href="/guides" className="lb-dd__all">Browse All Guides <ArrowRight size={15} /></Link>
+      </div>
+    </div>
   );
 }
 
@@ -124,7 +160,7 @@ export function FaqSection({ items, title, sub, id = "faq" }: { items: [string, 
 }
 
 // Horizontal call-to-action card with the gem on the right (Products page).
-export function CtaBanner({ eyebrow, title, body, href }: { eyebrow: string; title: React.ReactNode; body: string; href: string }) {
+export function CtaBanner({ eyebrow, title, body, href, label = "Boost My Server" }: { eyebrow: string; title: React.ReactNode; body: string; href: string; label?: string }) {
   return (
     <section className="lb-cta-banner" data-reveal>
       <div>
@@ -132,7 +168,7 @@ export function CtaBanner({ eyebrow, title, body, href }: { eyebrow: string; tit
         <h2>{title}</h2>
         <p>{body}</p>
         <div className="lb-row">
-          <a className="lb-btn lb-btn--primary" href={href}>Boost My Server <ArrowRight size={16} /></a>
+          <a className="lb-btn lb-btn--primary" href={href}>{label} <ArrowRight size={16} /></a>
           <a className="lb-btn lb-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord Support</a>
         </div>
         <small>Not affiliated with or endorsed by Discord Inc. All trademarks belong to their respective owners.</small>
@@ -154,8 +190,8 @@ export function Footer() {
           <Link className="lb-brand" href="/"><GGMark /><span>GG<b>Boosts</b></span></Link>
           <p>Cheap Discord server boosts with automated delivery, no login required, and a warranty on every order.</p>
         </div>
-        <nav aria-label="Shop"><h4>Shop</h4><Link href="/products">All Products</Link><Link href="/products">Lifetime Plans</Link><a href={getCustomerPortalHref()}>My Orders</a></nav>
-        <nav aria-label="Help"><h4>Help</h4><a href="/#how-it-works">How It Works</a><a href="/#faq">FAQ</a><Link href="/products#products-faq">Product FAQ</Link></nav>
+        <nav aria-label="Shop"><h4>Shop</h4><Link href="/products">Server Boosts</Link><Link href="/discord-members">Discord Members</Link><Link href="/aged-discord-accounts">Aged Accounts</Link><Link href="/discord-nitro">Discord Nitro</Link><a href={getCustomerPortalHref()}>My Orders</a></nav>
+        <nav aria-label="Help"><h4>Help</h4><Link href="/guides">Guides</Link><a href="/#how-it-works">How It Works</a><a href="/#faq">FAQ</a><Link href="/products#products-faq">Product FAQ</Link></nav>
         <nav aria-label="Contact"><h4>Contact</h4><a href={site.supportUrl} target="_blank" rel="noreferrer">Discord Support</a></nav>
       </div>
       <div className="lb-footer__legal">

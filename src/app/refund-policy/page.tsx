@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal/legal-page";
 import { site } from "@/lib/site-content";
 
-export const metadata: Metadata = { title: "Refund Policy | GGBoosts" };
+export const metadata: Metadata = { title: "Refund Policy" };
 
 export default function RefundPage() {
   return (
