@@ -85,6 +85,7 @@ export function Pricing({ products = [], offers, status, demo, onRetry, showHead
               const offer = findOffer(offers, count, duration);
               return (
                 <article key={`${count}-${duration}`} className={`lb-card ${count === POPULAR ? "is-popular" : ""}`}>
+                  {count === POPULAR && <span className="lb-item__badge">Most popular</span>}
                   <header>
                     <span className="lb-card__icon"><Rocket size={20} /></span>
                     <div><h3>{count} Server Boosts</h3><span>{formatDuration(duration)}</span></div>

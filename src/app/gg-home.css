@@ -597,3 +597,4 @@ html:has(.lb) { scroll-padding-top: 0; }
 .lb-item__badge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: var(--lime); color: var(--lime-ink); font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 6px 20px -6px var(--lime-glow); }
 .lb-items .lb-card.is-popular { order: 0; }
 .lb-items { padding-top: 12px; }
+.lb-cards { padding-top: 12px; }
