@@ -6,9 +6,9 @@ export type CategoryId = "boosts" | "nitro" | "accounts" | "members";
 
 export const CATEGORIES: { id: CategoryId; label: string }[] = [
   { id: "boosts", label: "Server Boosts" },
+  { id: "members", label: "Members" },
   { id: "nitro", label: "Nitro" },
   { id: "accounts", label: "Accounts" },
-  { id: "members", label: "Members" },
 ];
 
 export function categoryOf(product: Product): CategoryId | null {
@@ -18,6 +18,7 @@ export function categoryOf(product: Product): CategoryId | null {
 export function categoryOfTitle(title: string): CategoryId | null {
   const t = title.toLowerCase();
   if (/\bboosts?\b/.test(t)) return "boosts";
+  if (/\btokens?\b/.test(t)) return "nitro"; // "Nitro Account Token" lives in the Nitro tab
   if (/\bnitro\b/.test(t) && /\baccounts?\b/.test(t)) return "accounts"; // e.g. "3 Month Nitro Account"
   if (/\bnitro\b/.test(t)) return "nitro";
   if (/\baccounts?\b/.test(t)) return "accounts";
@@ -41,10 +42,14 @@ export function sortProducts(list: Product[], category: CategoryId): Product[] {
   const accountRank = (p: Product) => (t(p).includes("nitro") ? 0 : Number(p.title.match(/\b(20\d\d)\b/)?.[1] ?? 9999));
   // Members: offline → online → NFT → reactions.
   const memberRank = (p: Product) => (t(p).includes("nft") ? 2 : t(p).includes("offline") ? 0 : t(p).includes("online") ? 1 : t(p).includes("member") ? 3 : 4);
+  // Nitro: regular Nitro first, then tokens; each shortest plan → longest.
+  const months = (p: Product) => { const m = t(p).match(/(\d+)\s*(month|year)/); return m ? Number(m[1]) * (m[2] === "year" ? 12 : 1) : 99; };
+  const nitroRank = (p: Product) => (t(p).includes("token") ? 1000 : 0) + months(p);
   return [...list].sort((a, b) =>
     category === "accounts" ? accountRank(a) - accountRank(b)
       : category === "members" ? memberRank(a) - memberRank(b)
-        : Number(b.price ?? 0) - Number(a.price ?? 0));
+        : category === "nitro" ? nitroRank(a) - nitroRank(b)
+          : Number(b.price ?? 0) - Number(a.price ?? 0));
 }
 
 /** The one card per tab that gets the highlighted "Most popular" look. */
