@@ -116,7 +116,7 @@ export const productsFaqs: [string, string][] = [
 
 // Used on the Terms, Privacy and Refund pages. Fill in before going live.
 export const legal = {
-  businessName: "[YOUR LEGAL NAME OR BUSINESS NAME]",
+  businessName: "GGBoosts",
   governingLaw: "the State of Illinois, United States",
   lastUpdated: "October 6, 2026",
 };

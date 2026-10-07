@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Privacy Policy | GGBoosts" };
 export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy Policy">
-      <p>This policy explains what information {site.name} (operated by {legal.businessName}) collects, why, and what we do with it.</p>
+      <p>This policy explains what information {site.name}{legal.businessName !== site.name && <> (operated by {legal.businessName})</>} collects, why, and what we do with it.</p>
 
       <h2>What we collect</h2>
       <ul>

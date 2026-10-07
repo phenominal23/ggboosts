@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Terms of Service | GGBoosts" };
 export default function TermsPage() {
   return (
     <LegalPage title="Terms of Service">
-      <p>These Terms of Service (&quot;Terms&quot;) govern your use of the {site.name} website and any purchase you make from us. {site.name} is operated by {legal.businessName} (&quot;we&quot;, &quot;us&quot;). By placing an order you agree to these Terms.</p>
+      <p>These Terms of Service (&quot;Terms&quot;) govern your use of the {site.name} website and any purchase you make from us. {legal.businessName === site.name ? <>{site.name} is referred to as &quot;we&quot; or &quot;us&quot;.</> : <>{site.name} is operated by {legal.businessName} (&quot;we&quot;, &quot;us&quot;).</>} By placing an order you agree to these Terms.</p>
 
       <h2>1. What we sell</h2>
       <p>We sell Discord server boost packages. A package applies a set number of boosts to the Discord server you specify, for the plan length you choose (for example 1 Month, 3 Months, 1 Year or Lifetime).</p>
