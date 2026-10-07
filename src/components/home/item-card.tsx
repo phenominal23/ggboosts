@@ -14,8 +14,16 @@ const perks: Record<CategoryId, string[]> = {
   boosts: [],
   nitro: ["Delivered to your email & dashboard", "Full access", "Discord support"],
   accounts: ["Full access — change email & password", "Delivered to your email & dashboard", "Discord support"],
-  members: ["Delivered to your server invite", "Pick any amount in range", "Discord support"],
+  members: ["Pick any amount in range", "No Discord login needed", "Discord support"],
 };
+
+// How long Liteboosts' members stay in the server. Shown on the card so nobody expects them to be permanent.
+function stayFor(title: string): string[] {
+  const t = title.toLowerCase();
+  if (t.includes("online members")) return ["Members stay for 30 days"];
+  if (t.includes("offline members")) return ["Members stay for 90 days"];
+  return [];
+}
 
 /** A product you buy by quantity: Nitro, accounts, members, reactions. */
 export function ItemCard({ product, category, demo }: { product: Product; category: CategoryId; demo: boolean }) {
@@ -60,7 +68,7 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
         </div>
       )}
 
-      <ul>{perks[category].map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
+      <ul>{[...stayFor(product.title), ...perks[category]].map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
 
       {soldOut
         ? <button className="lb-btn lb-btn--primary" type="button" disabled>Sold out</button>

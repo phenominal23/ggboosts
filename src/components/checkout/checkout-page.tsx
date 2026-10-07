@@ -37,6 +37,7 @@ const emptyBilling: Billing = { name: "", line1: "", city: "", country: "US", po
 function fieldHint(field: StorefrontCustomField) {
   const n = field.name.toLowerCase();
   if (n.includes("invite")) return { placeholder: field.placeholder || "https://discord.gg/your-invite", label: "Permanent Discord Server Invite" };
+  if (n.includes("server id")) return { placeholder: field.placeholder || "123456789012345678", label: "Discord Server ID" };
   if (n.includes("username")) return { placeholder: field.placeholder || "discorduser123", label: "Discord Username" };
   return { placeholder: field.placeholder, label: field.name };
 }
@@ -58,6 +59,7 @@ export function CheckoutPage() {
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [debug, setDebug] = useState(false);
   const [inviteHelp, setInviteHelp] = useState(false);
+  const [serverIdHelp, setServerIdHelp] = useState(false);
   const [cryptoOpen, setCryptoOpen] = useState(false);
   const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean; quantity: number } | null>(null);
   const started = useRef(false);
@@ -161,7 +163,9 @@ export function CheckoutPage() {
     if (!isEmail(email)) next.email = "Enter a valid email — your receipt and order link go here.";
     fields.forEach(f => {
       const msg = validateStorefrontCustomFieldValue(f, values[f.name] ?? "");
-      if (msg) next[`f:${f.name}`] = f.type === "checkbox" ? "Please tick this box to continue." : f.name.toLowerCase().includes("invite") && msg.includes("format") ? "That doesn't look like a Discord invite link (discord.gg/…)." : msg;
+      if (msg) next[`f:${f.name}`] = f.type === "checkbox" ? "Please tick this box to continue." : f.name.toLowerCase().includes("invite") && msg.includes("format") ? "That doesn't look like a Discord invite link (discord.gg/…)."
+        : f.name.toLowerCase().includes("server id") && msg.includes("format") ? "A server ID is a long number, like 123456789012345678. See \"How do I find my Server ID?\" below."
+        : msg;
     });
     return showErrors(next);
   }
@@ -456,6 +460,18 @@ export function CheckoutPage() {
                 <li>In Discord, right-click your server icon → <b>Invite People</b>.</li>
                 <li>Click <b>Edit invite link</b> at the bottom.</li>
                 <li>Set <b>Expire After</b> to <b>Never</b> and <b>Max Number of Uses</b> to <b>No limit</b>, then copy the link.</li>
+              </ol>
+            )}
+          </div>
+        )}
+        {text.some(f => f.name.toLowerCase().includes("server id")) && (
+          <div className="co-howto">
+            <button type="button" className="co-howto__toggle" aria-expanded={serverIdHelp} onClick={() => setServerIdHelp(o => !o)}>How do I find my Server ID? <ChevronDown size={14} /></button>
+            {serverIdHelp && (
+              <ol>
+                <li>In Discord, open <b>User Settings</b> → <b>Advanced</b> and turn on <b>Developer Mode</b>.</li>
+                <li>Right-click your server icon (long-press on mobile) → <b>Copy Server ID</b>.</li>
+                <li>Paste it here — it's a long number like 123456789012345678.</li>
               </ol>
             )}
           </div>
