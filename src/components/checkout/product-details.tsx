@@ -6,7 +6,7 @@ import { Fragment, useMemo } from "react";
 // "- " / "• " lines become bullet lists, a short line right before a list becomes its heading, and URLs become links.
 // Rendering is plain React (no injected HTML), so nothing in a description can run code.
 
-type Block = { kind: "heading" | "para"; text: string } | { kind: "list"; items: string[] };
+type Block = { kind: "heading" | "para"; text: string } | { kind: "list"; ordered: boolean; items: string[] };
 
 function htmlToLines(raw: string): string[] {
   if (!/<\/?[a-z][\s\S]*>/i.test(raw) || typeof window === "undefined") return raw.split(/\r?\n/);
@@ -26,9 +26,10 @@ function toBlocks(raw: string): Block[] {
     if (!line) return;
     if (bullet.test(line)) {
       const item = line.replace(bullet, "");
+      const ordered = /^\d/.test(line);
       const last = blocks[blocks.length - 1];
-      if (last?.kind === "list") last.items.push(item);
-      else blocks.push({ kind: "list", items: [item] });
+      if (last?.kind === "list" && last.ordered === ordered) last.items.push(item);
+      else blocks.push({ kind: "list", ordered, items: [item] });
       return;
     }
     const next = lines.slice(i + 1).find(Boolean) ?? "";
@@ -52,7 +53,9 @@ export function ProductDescription({ html }: { html: string }) {
   return (
     <div className="co-desc">
       {blocks.map((b, i) => b.kind === "list"
-        ? <ul key={i}>{b.items.map((t, j) => <li key={j}><Linkify text={t} /></li>)}</ul>
+        ? (b.ordered
+          ? <ol key={i}>{b.items.map((t, j) => <li key={j}><Linkify text={t} /></li>)}</ol>
+          : <ul key={i}>{b.items.map((t, j) => <li key={j}><Linkify text={t} /></li>)}</ul>)
         : b.kind === "heading" ? <h4 key={i}>{b.text}</h4>
           : <p key={i}><Linkify text={b.text} /></p>)}
     </div>

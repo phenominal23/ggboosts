@@ -251,3 +251,5 @@
 .co-desc ul { display: grid; gap: 6px; padding-left: 18px; }
 .co-desc h4 + ul { margin-top: 8px; }
 .co-desc li::marker { color: var(--lime); }
+.co-desc ol { display: grid; gap: 6px; padding-left: 20px; list-style: decimal; }
+.co-desc h4 + ol { margin-top: 8px; }

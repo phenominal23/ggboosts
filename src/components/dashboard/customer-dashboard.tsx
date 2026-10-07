@@ -1,5 +1,6 @@
 "use client";
 
+import { ProductDescription } from "@/components/checkout/product-details";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { HeadlessCustomerMe, HeadlessCustomerOrder, HeadlessCustomerOrderSummary } from "@shoppexio/storefront/customer";
@@ -372,10 +373,14 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
 
             {order.lineItems.map(item => {
               const ds = deliveryStatus(item.deliveryStatus);
-              // Only show the delivery message once the item is actually delivered. Service products carry their
-              // "delivered" text on the product itself, so without this check it would show the moment someone pays.
+              // Product "Instructions" from Shoppex (what to do after paying) show from the moment the order is paid.
+              // The actual delivery (what you type when fulfilling) only shows once the item is delivered.
               const isDelivered = item.deliveryStatus === "DELIVERED" || !!item.deliveredAt;
-              const delivered = isDelivered ? item.deliveryText?.trim() || item.product?.serviceText?.trim() || null : null;
+              const instructions = item.product?.serviceText?.trim() || "";
+              const deliveredParts = isDelivered
+                ? [item.deliveryText?.trim() ?? "", ...(item.deliverySummary?.notes ?? []).map(n => n.trim())]
+                  .filter((t, i, all) => t && (!instructions || !sameText(t, instructions)) && all.findIndex(o => sameText(o, t)) === i)
+                : [];
               return (
                 <div key={item.id} className="dash-card dash-item">
                   <div className="dash-item__head">
@@ -387,12 +392,14 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
                     <span className={toneClass(ds.tone)}>{ds.label}</span>
                     {item.deliveredAt && <small>Delivered {formatDate(item.deliveredAt, true)}</small>}
                   </div>
-                  {item.deliveryStatus === "AWAITING_FULFILLMENT" && <p className="dash-note">Payment received — your order is in the queue. You'll get an email the moment it's delivered. Most orders are done within 24 hours.</p>}
+                  {item.deliveryStatus === "AWAITING_FULFILLMENT" && <p className="dash-note">Payment received — your order is in the queue.{instructions ? " Follow the steps below." : ""} You'll get an email the moment it's delivered.</p>}
                   {item.deliveryStatus === "FAILED" && <p className="dash-note dash-note--bad">Delivery hit a problem. Open a support ticket and we'll sort it out.</p>}
-                  {delivered && <div className="dash-delivery"><span className="dash-label">Delivery details</span><p>{delivered}</p></div>}
-                  {isDelivered && item.deliverySummary?.notes
-                    .filter(n => !delivered || !sameText(n, delivered)) // Shoppex repeats the delivery text as a note
-                    .map((n, i) => <p key={i} className="dash-note">{n}</p>)}
+                  {deliveredParts.length > 0 && (
+                    <div className="dash-delivery"><span className="dash-label">Delivery details</span>{deliveredParts.map((t, i) => <ProductDescription key={i} html={t} />)}</div>
+                  )}
+                  {instructions && (
+                    <div className="dash-instructions"><span className="dash-label">{isDelivered ? "Instructions" : "Next steps"}</span><ProductDescription html={instructions} /></div>
+                  )}
                 </div>
               );
             })}

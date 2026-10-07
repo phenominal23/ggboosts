@@ -196,3 +196,12 @@ button.dash-table__row:hover { background: #ffffff07; }
   .dash-latest__foot { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .dash-spinner { animation-duration: 2s; } }
+
+/* Delivery + instructions blocks on an order */
+.dash-delivery .co-desc, .dash-instructions .co-desc { margin-top: 8px; color: var(--text); font-size: 14px; line-height: 1.65; }
+.dash-delivery .co-desc + .co-desc { margin-top: 12px; }
+.dash-instructions { margin-top: 14px; padding: 14px; border: 1px solid var(--line, #ffffff14); border-radius: 12px; background: #ffffff05; }
+.dash-instructions .co-desc { color: #d4d4d8; }
+.dash-delivery .co-desc a, .dash-instructions .co-desc a { color: var(--lime, #b8ff3c); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+.dash-delivery .co-desc ul, .dash-instructions .co-desc ul { padding-left: 18px; list-style: disc; }
+.dash-delivery .co-desc ol, .dash-instructions .co-desc ol { padding-left: 20px; list-style: decimal; }
