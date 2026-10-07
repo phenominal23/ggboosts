@@ -372,7 +372,10 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
 
             {order.lineItems.map(item => {
               const ds = deliveryStatus(item.deliveryStatus);
-              const delivered = item.deliveryText?.trim() || item.product?.serviceText?.trim() || null;
+              // Only show the delivery message once the item is actually delivered. Service products carry their
+              // "delivered" text on the product itself, so without this check it would show the moment someone pays.
+              const isDelivered = item.deliveryStatus === "DELIVERED" || !!item.deliveredAt;
+              const delivered = isDelivered ? item.deliveryText?.trim() || item.product?.serviceText?.trim() || null : null;
               return (
                 <div key={item.id} className="dash-card dash-item">
                   <div className="dash-item__head">
@@ -384,10 +387,10 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
                     <span className={toneClass(ds.tone)}>{ds.label}</span>
                     {item.deliveredAt && <small>Delivered {formatDate(item.deliveredAt, true)}</small>}
                   </div>
-                  {item.deliveryStatus === "AWAITING_FULFILLMENT" && <p className="dash-note">Your boosts are being applied. Most orders finish within minutes — if it's been longer than an hour, contact support below.</p>}
+                  {item.deliveryStatus === "AWAITING_FULFILLMENT" && <p className="dash-note">Payment received — your order is in the queue. You'll get an email the moment it's delivered. Most orders are done within 24 hours.</p>}
                   {item.deliveryStatus === "FAILED" && <p className="dash-note dash-note--bad">Delivery hit a problem. Open a support ticket and we'll sort it out.</p>}
                   {delivered && <div className="dash-delivery"><span className="dash-label">Delivery details</span><p>{delivered}</p></div>}
-                  {item.deliverySummary?.notes
+                  {isDelivered && item.deliverySummary?.notes
                     .filter(n => !delivered || !sameText(n, delivered)) // Shoppex repeats the delivery text as a note
                     .map((n, i) => <p key={i} className="dash-note">{n}</p>)}
                 </div>
