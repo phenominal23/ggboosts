@@ -43,6 +43,7 @@ function urlForView(v: View) {
 }
 
 const toneClass = (tone: string) => `dash-badge dash-badge--${tone}`;
+const squash = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
 
 function greeting() {
   const h = new Date().getHours();
@@ -384,7 +385,9 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
                   {item.deliveryStatus === "AWAITING_FULFILLMENT" && <p className="dash-note">Your boosts are being applied. Most orders finish within minutes — if it's been longer than an hour, contact support below.</p>}
                   {item.deliveryStatus === "FAILED" && <p className="dash-note dash-note--bad">Delivery hit a problem. Open a support ticket and we'll sort it out.</p>}
                   {delivered && <div className="dash-delivery"><span className="dash-label">Delivery details</span><p>{delivered}</p></div>}
-                  {item.deliverySummary?.notes.map((n, i) => <p key={i} className="dash-note">{n}</p>)}
+                  {item.deliverySummary?.notes
+                    .filter(n => !delivered || squash(n) !== squash(delivered)) // Shoppex repeats the delivery text as a note
+                    .map((n, i) => <p key={i} className="dash-note">{n}</p>)}
                 </div>
               );
             })}
