@@ -44,6 +44,8 @@ function urlForView(v: View) {
 
 const toneClass = (tone: string) => `dash-badge dash-badge--${tone}`;
 const squash = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
+// Same message even if a link or a line was edited since: compare how they start.
+const sameText = (a: string, b: string) => { const x = squash(a), y = squash(b); return x === y || x.slice(0, 60) === y.slice(0, 60); };
 
 function greeting() {
   const h = new Date().getHours();
@@ -386,7 +388,7 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
                   {item.deliveryStatus === "FAILED" && <p className="dash-note dash-note--bad">Delivery hit a problem. Open a support ticket and we'll sort it out.</p>}
                   {delivered && <div className="dash-delivery"><span className="dash-label">Delivery details</span><p>{delivered}</p></div>}
                   {item.deliverySummary?.notes
-                    .filter(n => !delivered || squash(n) !== squash(delivered)) // Shoppex repeats the delivery text as a note
+                    .filter(n => !delivered || !sameText(n, delivered)) // Shoppex repeats the delivery text as a note
                     .map((n, i) => <p key={i} className="dash-note">{n}</p>)}
                 </div>
               );
