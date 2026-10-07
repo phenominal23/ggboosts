@@ -376,9 +376,13 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
               // Product "Instructions" from Shoppex (what to do after paying) show from the moment the order is paid.
               // The actual delivery (what you type when fulfilling) only shows once the item is delivered.
               const isDelivered = item.deliveryStatus === "DELIVERED" || !!item.deliveredAt;
-              const instructions = item.product?.serviceText?.trim() || "";
+              // What Shoppex sends: `deliveryText` = the product's Instructions (available from payment);
+              // `notes` = what you type when you click Fulfill. `serviceText` is the old "Delivered message"
+              // field, which only matters for Service-type products (sent automatically on payment).
+              const instructions = item.deliveryText?.trim() || "";
+              const isService = item.productType?.toUpperCase() === "SERVICE";
               const deliveredParts = isDelivered
-                ? [item.deliveryText?.trim() ?? "", ...(item.deliverySummary?.notes ?? []).map(n => n.trim())]
+                ? [...(isService ? [item.product?.serviceText?.trim() ?? ""] : []), ...(item.deliverySummary?.notes ?? []).map(n => n.trim())]
                   .filter((t, i, all) => t && (!instructions || !sameText(t, instructions)) && all.findIndex(o => sameText(o, t)) === i)
                 : [];
               return (
