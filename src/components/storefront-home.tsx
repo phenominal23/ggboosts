@@ -6,7 +6,7 @@ import { BoostFeed, CheckoutMock, PaymentMock } from "@/components/home/how-it-w
 import { Pricing } from "@/components/home/pricing";
 import { ReviewsSection } from "@/components/home/reviews-section";
 import { Comparison } from "@/components/home/comparison";
-import { DiscordIcon, FaqSection, Footer, Nav, ShoppexEmbed, SiteBackground, useScrollReveal, useStorefront } from "@/components/home/site-chrome";
+import { DiscordIcon, FaqSection, Footer, Nav, SiteBackground, useScrollReveal, useStorefront } from "@/components/home/site-chrome";
 import { faqs, features, finalCta, hero, howItWorks, site, stats } from "@/lib/site-content";
 
 export function StorefrontHome() {
@@ -15,7 +15,6 @@ export function StorefrontHome() {
 
   return (
     <main className="lb">
-      <ShoppexEmbed enabled={!demo && status === "ready"} />
       <a className="skip-link" href="#pricing">Skip to pricing</a>
       <SiteBackground />
       <Nav />

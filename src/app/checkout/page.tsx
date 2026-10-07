@@ -1,5 +1,11 @@
-import { CheckoutFlow } from "@/components/checkout-flow";
+import type { Metadata } from "next";
+import { CheckoutPage } from "@/components/checkout/checkout-page";
 
-export default function CheckoutPage() {
-  return <CheckoutFlow />;
+export const metadata: Metadata = {
+  title: "Checkout | GGBoosts",
+  robots: { index: false, follow: false },
+};
+
+export default function Checkout() {
+  return <CheckoutPage />;
 }

@@ -6,6 +6,7 @@ import "./globals.css";
 import "./gg-v2.css";
 import "./gg-home.css";
 import "./gg-dashboard.css";
+import "./gg-checkout.css";
 
 
 

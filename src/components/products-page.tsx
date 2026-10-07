@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Pricing } from "@/components/home/pricing";
-import { CtaBanner, FaqSection, Footer, Nav, ShoppexEmbed, SiteBackground, useScrollReveal, useStorefront } from "@/components/home/site-chrome";
+import { CtaBanner, FaqSection, Footer, Nav, SiteBackground, useScrollReveal, useStorefront } from "@/components/home/site-chrome";
 import { productsFaqs, productsPage } from "@/lib/site-content";
 
 export function ProductsPage() {
@@ -11,7 +11,6 @@ export function ProductsPage() {
 
   return (
     <main className="lb">
-      <ShoppexEmbed enabled={!demo && status === "ready"} />
       <a className="skip-link" href="#pricing">Skip to products</a>
       <SiteBackground />
       <Nav active="products" />
