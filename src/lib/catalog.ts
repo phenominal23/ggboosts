@@ -31,7 +31,9 @@ export function unitName(product: Product): { one: string; many: string } {
   const t = product.title.toLowerCase();
   if (/members?\b/.test(t)) return { one: "member", many: "members" };
   if (/reactions?\b/.test(t)) return { one: "reaction", many: "reactions" };
+  if (/tokens?\b/.test(t)) return { one: "token", many: "tokens" };
   if (/accounts?\b/.test(t)) return { one: "account", many: "accounts" };
+  if (/\bnitro\b/.test(t)) return { one: "plan", many: "plans" };
   return { one: "item", many: "items" };
 }
 

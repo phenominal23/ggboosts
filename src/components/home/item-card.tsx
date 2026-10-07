@@ -11,7 +11,7 @@ const icons: Record<CategoryId, typeof Gem> = { boosts: Gem, nitro: Gem, account
 // Used only when a product has no "Product Highlights" filled in on Shoppex.
 const fallbackPerks: Record<CategoryId, string[]> = {
   boosts: [],
-  nitro: ["Full access", "Delivered to your email & dashboard", "Discord support"],
+  nitro: ["Full Nitro perks", "2 server boosts included", "Delivered to your email & dashboard"],
   accounts: ["Full access — change email & password", "Delivered to your email & dashboard", "Discord support"],
   members: ["Pick any amount at checkout", "No Discord login needed", "Discord support"],
 };
@@ -42,7 +42,7 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
 
       <div className="lb-card__price">
         <strong><sup>{symbol}</sup>{formatted.replace(symbol, "")}</strong>
-        <span>per {unit.one}</span>
+        <span>{unit.one === "plan" ? "one-time payment" : `per ${unit.one}`}</span>
       </div>
 
       <ul>{perks.map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
