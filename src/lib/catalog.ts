@@ -18,6 +18,7 @@ export function categoryOf(product: Product): CategoryId | null {
 export function categoryOfTitle(title: string): CategoryId | null {
   const t = title.toLowerCase();
   if (/\bboosts?\b/.test(t)) return "boosts";
+  if (/\bnitro\b/.test(t) && /\baccounts?\b/.test(t)) return "accounts"; // e.g. "3 Month Nitro Account"
   if (/\bnitro\b/.test(t)) return "nitro";
   if (/\baccounts?\b/.test(t)) return "accounts";
   if (/\bmembers?\b|\breactions?\b/.test(t)) return "members";
