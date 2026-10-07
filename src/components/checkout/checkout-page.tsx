@@ -5,13 +5,14 @@ import Link from "next/link";
 import { assertAttribution, HeadlessCheckoutError } from "@shoppexio/checkout-js/headless";
 import type { CheckoutPaymentSession, CheckoutSessionView, StartPaymentSessionResult } from "@shoppexio/checkout-js/headless";
 import { buildStorefrontCustomFieldPayload, isStorefrontCheckboxCustomFieldValueChecked, normalizeStorefrontCustomFields, validateStorefrontCustomFieldValue, type Product, type StorefrontCustomField } from "@shoppexio/storefront";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Loader2, Lock, XCircle, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Loader2, Lock, Minus, Plus, XCircle, Zap } from "lucide-react";
 import { GGMark } from "@/components/gg-navigation";
 import { DiscordIcon, ShoppexEmbed, SiteBackground } from "@/components/home/site-chrome";
 import {
   FAILED, PAID, SITE_URL, WAITING, fieldsForLine, forgetSession, friendlyError, gatewayGroup, getCheckoutClient, isEmail, isSetupError, money, recallSession, rememberSession, revealAttribution, usableGateways,
 } from "@/components/checkout/checkout-client";
 import { AcceptedLogos, CoinIcon, CoinStack, coinInfo, methodInfo, policyLabel } from "@/components/checkout/checkout-ui";
+import { ProductDescription } from "@/components/checkout/product-details";
 import { AddressPanel, AttributionBadge, ManualPanel, SquarePanel, WaitingPanel } from "@/components/checkout/payment-panels";
 import { getCurrency, getQuantityBounds, getUnitPrice, getVariant } from "@/lib/product-utils";
 import { categoryOf, unitName } from "@/lib/catalog";
@@ -60,6 +61,8 @@ export function CheckoutPage() {
   const [debug, setDebug] = useState(false);
   const [inviteHelp, setInviteHelp] = useState(false);
   const [serverIdHelp, setServerIdHelp] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [draftQty, setDraftQty] = useState<string | null>(null);
   const [cryptoOpen, setCryptoOpen] = useState(false);
   const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean; quantity: number } | null>(null);
   const started = useRef(false);
@@ -345,14 +348,48 @@ export function CheckoutPage() {
   const groupCrypto = cryptoGateways.length > 1;
   const cryptoSelected = !!selected && gatewayGroup(selected) === "crypto";
 
+  // Quantity is picked here (not on the product cards), only before the checkout is created.
+  const bounds = plan && categoryOf(plan.product) !== "boosts" ? getQuantityBounds(plan.product, plan.variant) : { min: 1, max: 1 };
+  const qtyMax = bounds.max > 0 ? bounds.max : 100000;
+  const canPickQty = step === "details" && !!plan && qtyMax > bounds.min;
+  const qtyStep = bounds.min >= 100 ? 100 : 1;
+  const setQty = (n: number) => setPlan(p => (p ? { ...p, quantity: Math.min(qtyMax, Math.max(bounds.min, Math.round(n) || bounds.min)) } : p));
+  const description = plan?.product.description?.trim() ?? "";
+  const highlights = (plan?.product.product_highlights ?? []).map(h => h.trim()).filter(Boolean);
+  const hasDetails = !!description || highlights.length > 0;
+
   const orderCard = (
-    <section className="co-card co-order">
-      <div className="co-order__icon"><GGMark /></div>
-      <div className="co-order__text">
-        <strong>{itemTitle}{itemSub && <span> · {itemSub}</span>}{qty > 1 && <span> · {qty.toLocaleString()} {units.many}</span>}</strong>
-        <small><Zap size={12} /> Instant delivery</small>
+    <section className="co-card co-order-wrap">
+      <div className="co-order">
+        <div className="co-order__icon"><GGMark /></div>
+        <div className="co-order__text">
+          <strong>{itemTitle}{itemSub && <span> · {itemSub}</span>}{!canPickQty && qty > 1 && <span> · {qty.toLocaleString()} {units.many}</span>}</strong>
+          {canPickQty
+            ? <small className="co-order__meta">{money(itemPrice, currency)} each · Min {bounds.min.toLocaleString()}{bounds.max > 0 ? ` · Max ${bounds.max.toLocaleString()}` : ""}</small>
+            : <small><Zap size={12} /> Instant delivery</small>}
+        </div>
+        {canPickQty && (
+          <div className="co-qty">
+            <button type="button" aria-label="Less" disabled={qty <= bounds.min} onClick={() => setQty(qty - qtyStep)}><Minus size={15} /></button>
+            <input type="number" inputMode="numeric" aria-label="Quantity" min={bounds.min} max={bounds.max > 0 ? bounds.max : undefined} step={qtyStep} value={draftQty ?? qty}
+              onChange={e => setDraftQty(e.target.value)} onBlur={() => { if (draftQty !== null) setQty(Number(draftQty)); setDraftQty(null); }}
+              onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+            <button type="button" aria-label="More" disabled={qty >= qtyMax} onClick={() => setQty(qty + qtyStep)}><Plus size={15} /></button>
+          </div>
+        )}
+        <b className="co-order__price">{money(qty > 1 ? lineTotal : itemPrice, currency)}</b>
       </div>
-      <b className="co-order__price">{money(qty > 1 ? lineTotal : itemPrice, currency)}</b>
+      {hasDetails && (
+        <div className="co-details">
+          <button type="button" className="co-details__toggle" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(o => !o)}>Product details <ChevronDown size={16} /></button>
+          {detailsOpen && (
+            <div className="co-details__body">
+              {highlights.length > 0 && <ul className="co-details__hl">{highlights.map(h => <li key={h}>{h}</li>)}</ul>}
+              {description && <ProductDescription html={description} />}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 

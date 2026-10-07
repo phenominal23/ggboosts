@@ -1,74 +1,49 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import type { Product } from "@shoppexio/storefront";
-import { ArrowRight, Check, Gem, Minus, Plus, UserRound, Users } from "lucide-react";
+import { ArrowRight, Check, Gem, UserRound, Users } from "lucide-react";
 import { type CategoryId, unitName, unitPrice } from "@/lib/catalog";
-import { getCurrency, getProductHref, getQuantityBounds, getUnitPrice, isSoldOut } from "@/lib/product-utils";
-import { money } from "@/lib/pricing-helpers";
+import { getCurrency, getProductHref, getUnitPrice, isSoldOut } from "@/lib/product-utils";
 
 const icons: Record<CategoryId, typeof Gem> = { boosts: Gem, nitro: Gem, accounts: UserRound, members: Users };
 
-const perks: Record<CategoryId, string[]> = {
+// Used only when a product has no "Product Highlights" filled in on Shoppex.
+const fallbackPerks: Record<CategoryId, string[]> = {
   boosts: [],
-  nitro: ["Delivered to your email & dashboard", "Full access", "Discord support"],
+  nitro: ["Full access", "Delivered to your email & dashboard", "Discord support"],
   accounts: ["Full access — change email & password", "Delivered to your email & dashboard", "Discord support"],
-  members: ["Pick any amount in range", "No Discord login needed", "Discord support"],
+  members: ["Pick any amount at checkout", "No Discord login needed", "Discord support"],
 };
 
-// How long Liteboosts' members stay in the server. Shown on the card so nobody expects them to be permanent.
-function stayFor(title: string): string[] {
-  const t = title.toLowerCase();
-  if (t.includes("online members")) return ["Members stay for 30 days"];
-  if (t.includes("offline members")) return ["Members stay for 90 days"];
-  return [];
-}
-
-/** A product you buy by quantity: Nitro, accounts, members, reactions. */
+/** Nitro, accounts, members, reactions. Shows the unit price — the amount is picked at checkout. */
 export function ItemCard({ product, category, demo }: { product: Product; category: CategoryId; demo: boolean }) {
   const currency = getCurrency(product);
   const price = getUnitPrice(product);
-  const { min, max } = getQuantityBounds(product);
-  const bounded = max > 0; // no max set in Shoppex = no limit
-  const top = bounded ? max : Number.MAX_SAFE_INTEGER;
-  const step = min >= 100 ? 100 : 1;
-  const bulk = min >= 100;
-  const [qty, setQty] = useState(min);
   const soldOut = isSoldOut(product);
   const unit = unitName(product);
   const Icon = icons[category];
-  const clamp = (n: number) => Math.min(top, Math.max(min, Math.round(n)));
-  const total = price * qty;
-  const href = demo ? getProductHref(product) : `/checkout?${new URLSearchParams({ product: product.uniqid, qty: String(qty) })}`;
-  const single = min === 1 && top === 1;
+  const highlights = (product.product_highlights ?? []).map(h => h.trim()).filter(Boolean);
+  const perks = (highlights.length ? highlights : fallbackPerks[category]).slice(0, 5);
+  const href = demo ? getProductHref(product) : `/checkout?${new URLSearchParams({ product: product.uniqid })}`;
+  const title = product.title.replace(/\s+-\s+Full Access$/i, "");
+  const sub = /full access/i.test(product.title) ? "Full Access" : product.short_description?.trim() || null;
+  const formatted = unitPrice(price, currency);
+  const symbol = formatted.replace(/[\d.,\s]/g, "");
 
   return (
     <article className={`lb-card lb-item ${soldOut ? "is-soldout" : ""}`}>
       <header>
         <span className="lb-card__icon"><Icon size={20} /></span>
-        <div><h3>{product.title.replace(/\s+-\s+Full Access$/i, "")}</h3><span>{/full access/i.test(product.title) ? "Full Access" : bulk ? `${unitPrice(price, currency)} per ${unit.one}` : "Fast delivery"}</span></div>
+        <div><h3>{title}</h3>{sub && <span>{sub}</span>}</div>
       </header>
 
       <div className="lb-card__price">
-        <strong><sup>$</sup>{money(single || !bulk ? price : total, currency).replace("$", "")}</strong>
-        <span>{bulk ? `for ${qty.toLocaleString()} ${unit.many}` : single ? "One-time payment" : bounded ? `per ${unit.one} · up to ${top} per order` : `per ${unit.one}`}</span>
+        <strong><sup>{symbol}</sup>{formatted.replace(symbol, "")}</strong>
+        <span>per {unit.one}</span>
       </div>
 
-      {!single && !soldOut && (
-        <div className="lb-qty">
-          <span className="lb-qty__label">Quantity</span>
-          <div className="lb-qty__ctl">
-            <button type="button" aria-label="Less" disabled={qty <= min} onClick={() => setQty(q => clamp(q - step))}><Minus size={15} /></button>
-            <input type="number" inputMode="numeric" min={min} max={bounded ? top : undefined} step={step} value={qty} aria-label={`Number of ${unit.many}`}
-              onChange={e => setQty(Number(e.target.value) || min)} onBlur={() => setQty(q => clamp(q))} />
-            <button type="button" aria-label="More" disabled={qty >= top} onClick={() => setQty(q => clamp(q + step))}><Plus size={15} /></button>
-          </div>
-          <small>{bounded ? `Min ${min.toLocaleString()} · Max ${top.toLocaleString()}` : `Min ${min.toLocaleString()}`}{!bulk && qty > 1 ? ` · Total ${money(total, currency)}` : ""}</small>
-        </div>
-      )}
-
-      <ul>{[...stayFor(product.title), ...perks[category]].map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
+      <ul>{perks.map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
 
       {soldOut
         ? <button className="lb-btn lb-btn--primary" type="button" disabled>Sold out</button>
