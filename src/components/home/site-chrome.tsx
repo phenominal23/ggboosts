@@ -178,6 +178,11 @@ export function CtaBanner({ eyebrow, title, body, href, label = "Boost My Server
   );
 }
 
+const footerGuides = [
+  ...menuGuides,
+  { slug: "how-long-do-discord-boosts-last", label: "How Long Boosts Last", hint: "" },
+];
+
 export function Footer() {
   return (
     <footer className="lb-footer">
@@ -186,17 +191,38 @@ export function Footer() {
         <div className="lb-pay-marquee__track">{[0, 1, 2, 3].flatMap(copy => paymentLogos.map(p => <span key={`${copy}-${p}`} aria-hidden={copy > 0}><PaymentLogo name={p} /></span>))}</div>
       </div>
       <div className="lb-footer__grid">
-        <div>
+        <div className="lb-footer__brand">
           <Link className="lb-brand" href="/"><GGMark /><span>GG<b>Boosts</b></span></Link>
-          <p>Cheap Discord server boosts with automated delivery, no login required, and a warranty on every order.</p>
+          <p>GGBoosts is your store for Discord server boosts, Nitro, members and aged accounts. One-time payments, no Discord login for boosts, and real support in our Discord.</p>
+          <nav className="lb-footer__quick" aria-label="On this site"><a href="/#features">Features</a><a href="/#how-it-works">How It Works</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav>
+          <div className="lb-footer__social"><a href={site.supportUrl} target="_blank" rel="noreferrer" aria-label="Join our Discord"><DiscordIcon size={17} /></a></div>
         </div>
-        <nav aria-label="Shop"><h4>Shop</h4><Link href="/products">Server Boosts</Link><Link href="/discord-members">Discord Members</Link><Link href="/aged-discord-accounts">Aged Accounts</Link><Link href="/discord-nitro">Discord Nitro</Link><a href={getCustomerPortalHref()}>My Orders</a></nav>
-        <nav aria-label="Help"><h4>Help</h4><Link href="/guides">Guides</Link><a href="/#how-it-works">How It Works</a><a href="/#faq">FAQ</a><Link href="/products#products-faq">Product FAQ</Link></nav>
-        <nav aria-label="Contact"><h4>Contact</h4><a href={site.supportUrl} target="_blank" rel="noreferrer">Discord Support</a></nav>
+        <nav aria-label="Shop">
+          <h4>Shop</h4>
+          <Link href="/products">Buy Discord Boosts</Link>
+          <Link href="/products">Lifetime Boost Plans</Link>
+          <Link href="/discord-members">Buy Discord Members</Link>
+          <Link href="/discord-members">Message Reactions</Link>
+          <Link href="/aged-discord-accounts">Aged Discord Accounts</Link>
+          <Link href="/discord-nitro">Cheap Discord Nitro</Link>
+          <a href={getCustomerPortalHref()}>My Orders</a>
+        </nav>
+        <nav aria-label="Guides">
+          <h4>Guides</h4>
+          {footerGuides.map(g => <Link key={g.slug} href={`/guides/${g.slug}`}>{g.label}</Link>)}
+          <Link className="lb-footer__all" href="/guides">All Guides <ArrowRight size={14} /></Link>
+        </nav>
+        <nav aria-label="Company">
+          <h4>Company</h4>
+          <a href={site.supportUrl} target="_blank" rel="noreferrer">Discord Support</a>
+          <Link href="/products#products-faq">Product FAQ</Link>
+          <Link href="/terms">Terms of Service</Link>
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/refund-policy">Refund Policy</Link>
+        </nav>
       </div>
       <div className="lb-footer__legal">
         <span>© {new Date().getFullYear()} {site.name}. All rights reserved.</span>
-        <nav aria-label="Legal" className="lb-footer__legal-links"><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link><Link href="/refund-policy">Refunds</Link></nav>
         <span>Not affiliated with or endorsed by Discord Inc.</span>
       </div>
     </footer>
