@@ -13,7 +13,8 @@ import {
 } from "@/components/checkout/checkout-client";
 import { AcceptedLogos, CoinIcon, CoinStack, coinInfo, methodInfo, policyLabel } from "@/components/checkout/checkout-ui";
 import { AddressPanel, AttributionBadge, ManualPanel, SquarePanel, WaitingPanel } from "@/components/checkout/payment-panels";
-import { getCurrency, getUnitPrice, getVariant } from "@/lib/product-utils";
+import { getCurrency, getQuantityBounds, getUnitPrice, getVariant } from "@/lib/product-utils";
+import { categoryOf, unitName } from "@/lib/catalog";
 import { shoppexConfig } from "@/lib/shoppex-config";
 import { loadStorefrontData } from "@/lib/storefront-data";
 import { site } from "@/lib/site-content";
@@ -58,7 +59,7 @@ export function CheckoutPage() {
   const [debug, setDebug] = useState(false);
   const [inviteHelp, setInviteHelp] = useState(false);
   const [cryptoOpen, setCryptoOpen] = useState(false);
-  const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean } | null>(null);
+  const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean; quantity: number } | null>(null);
   const started = useRef(false);
 
   const client = getCheckoutClient();
@@ -94,13 +95,20 @@ export function CheckoutPage() {
         const data = await loadStorefrontData();
         const found = data.success ? data.products.find(x => x.uniqid === product) : undefined;
         if (!found) { setPhase({ name: "error", message: "We couldn't find that plan. It may have changed — please pick it again from the plans page." }); return; }
-        // Safety net: if this product has no checkout fields set up in Shoppex, borrow them from another
-        // boost product so we never take an order without a server invite.
+        // Safety net: if a boost product has no checkout fields set up in Shoppex, borrow them from another
+        // boost product so we never take a boost order without a server invite. (Boosts only — accounts
+        // and Nitro don't need an invite, and members/reactions have their own fields.)
         const own = normalizeStorefrontCustomFields(found.custom_fields);
-        const donor = own.length ? null : data.success ? data.products.find(x => normalizeStorefrontCustomFields(x.custom_fields).length > 0) : undefined;
+        const isBoost = categoryOf(found) === "boosts";
+        const donor = own.length || !isBoost || !data.success ? null
+          : data.products.find(x => x.uniqid !== found.uniqid && categoryOf(x) === "boosts" && normalizeStorefrontCustomFields(x.custom_fields).length > 0);
         const chosen = donor ? { ...found, custom_fields: donor.custom_fields } : found;
         if (donor) console.warn(`[GGBoosts] "${found.title}" has no custom fields in Shoppex — using the ones from "${donor.title}". Add them to this product in Shoppex.`);
-        setPlan({ product: chosen, variant, priceVariant });
+        // Quantity comes from the product card's picker; keep it inside the product's min/max.
+        const { min, max } = getQuantityBounds(found, variant);
+        const asked = Math.round(Number(q.get("qty") ?? min));
+        const quantity = Math.min(max > 0 ? max : Number.MAX_SAFE_INTEGER, Math.max(min, Number.isFinite(asked) ? asked : min));
+        setPlan({ product: chosen, variant, priceVariant, quantity });
         const defaults: Record<string, string> = {};
         normalizeStorefrontCustomFields(chosen.custom_fields).forEach(f => { if (f.defaultValue) defaults[f.name] = f.defaultValue; });
         setValues(defaults);
@@ -165,7 +173,7 @@ export function CheckoutPage() {
     try {
       const origin = window.location.origin;
       const v = await client.createSession({
-        product_id: plan.product.uniqid, variant_id: plan.variant, quantity: 1, email: email.trim(),
+        product_id: plan.product.uniqid, variant_id: plan.variant, quantity: plan.quantity, email: email.trim(),
         custom_fields: buildStorefrontCustomFieldPayload(fields, values),
         return_url: `${origin}/checkout?return=1`, cancel_url: `${origin}/products`,
       });
@@ -321,9 +329,12 @@ export function CheckoutPage() {
   const itemTitle = view?.line_items[0]?.title ?? plan?.product.title ?? "Server Boosts";
   const itemSub = view?.line_items[0]?.variant_title ?? (plan ? getVariant(plan.product, plan.variant)?.title : null) ?? null;
   const positive = (...xs: (string | number | null | undefined)[]) => xs.find(x => Number(x) > 0);
-  const itemPrice = String(positive(view?.line_items[0]?.unit_price, view?.line_items[0]?.line_total, planPrice, view?.breakdown.subtotal) ?? 0);
-  const qty = view?.line_items[0]?.quantity ?? 1;
-  const total = view ? view.breakdown.total : String(planPrice);
+  const qty = view?.line_items[0]?.quantity ?? plan?.quantity ?? 1;
+  const perLine = (x: string | number | null | undefined) => (Number(x) > 0 ? Number(x) / qty : undefined);
+  const itemPrice = String(positive(view?.line_items[0]?.unit_price, planPrice, perLine(view?.line_items[0]?.line_total), perLine(view?.breakdown.subtotal)) ?? 0);
+  const lineTotal = Math.round(Number(itemPrice) * qty * 100) / 100;
+  const units = plan && qty > 1 ? unitName(plan.product) : { one: "item", many: "items" };
+  const total = view ? view.breakdown.total : String(lineTotal);
   const step = phase.name === "details" || !view ? "details" : phase.name === "form" ? "method" : "pay";
   const selectedInfo = selected ? (gatewayGroup(selected) === "crypto" ? { title: `Pay with ${coinInfo(selected).name}` } : methodInfo(selected)) : null;
   const cryptoGateways = gateways.filter(g => gatewayGroup(g) === "crypto");
@@ -334,10 +345,10 @@ export function CheckoutPage() {
     <section className="co-card co-order">
       <div className="co-order__icon"><GGMark /></div>
       <div className="co-order__text">
-        <strong>{itemTitle}{itemSub && <span> · {itemSub}</span>}</strong>
+        <strong>{itemTitle}{itemSub && <span> · {itemSub}</span>}{qty > 1 && <span> · {qty.toLocaleString()} {units.many}</span>}</strong>
         <small><Zap size={12} /> Instant delivery</small>
       </div>
-      <b className="co-order__price">{money(itemPrice, currency)}</b>
+      <b className="co-order__price">{money(qty > 1 ? lineTotal : itemPrice, currency)}</b>
     </section>
   );
 
@@ -356,7 +367,7 @@ export function CheckoutPage() {
         </div>
         <dl className="co-sum__rows">
           <div><dt>Item price</dt><dd>{money(itemPrice, currency)}</dd></div>
-          <div><dt>Quantity</dt><dd>{qty} item{qty === 1 ? "" : "s"}</dd></div>
+          <div><dt>Quantity</dt><dd>{qty.toLocaleString()} {qty === 1 ? units.one : units.many}</dd></div>
           {view?.breakdown.discount && Number(view.breakdown.discount) > 0 && <div className="is-disc"><dt>Discount</dt><dd>−{money(view.breakdown.discount, currency)}</dd></div>}
           {view?.breakdown.tax && Number(view.breakdown.tax) > 0 && <div><dt>Tax</dt><dd>{money(view.breakdown.tax, currency)}</dd></div>}
           {view?.breakdown.fee && Number(view.breakdown.fee) > 0 && <div><dt>Processing fee</dt><dd>{money(view.breakdown.fee, currency)}</dd></div>}

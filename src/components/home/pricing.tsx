@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Check, RotateCw, Rocket } from "lucide-react";
+import { useMemo, useState } from "react";
+import type { Product } from "@shoppexio/storefront";
+import { Check, Gem, RotateCw, Rocket, UserRound, Users } from "lucide-react";
+import { CATEGORIES, type CategoryId, categoryOf, sortProducts } from "@/lib/catalog";
+import { ItemCard } from "@/components/home/item-card";
 import type { BoostOffer } from "@/lib/boost-offers";
 import { formatDuration, getServerLevel, LIFETIME } from "@/lib/boost-packages";
 import { COUNTS, DURATIONS, POPULAR, currencySymbol, findOffer, money, savingsFor } from "@/lib/pricing-helpers";
@@ -18,9 +21,23 @@ function activeLabel(duration: number) {
   return "Active for 1 year";
 }
 
-export function Pricing({ offers, status, demo, onRetry, showHead = true }: { offers: BoostOffer[]; status: Status; demo: boolean; onRetry: () => void; showHead?: boolean }) {
+const tabIcons: Record<CategoryId, typeof Rocket> = { boosts: Rocket, nitro: Gem, accounts: UserRound, members: Users };
+
+export function Pricing({ products = [], offers, status, demo, onRetry, showHead = true }: { products?: Product[]; offers: BoostOffer[]; status: Status; demo: boolean; onRetry: () => void; showHead?: boolean }) {
   const available = DURATIONS.filter(d => offers.some(o => o.duration === d));
   const [picked, setPicked] = useState<number | null>(null);
+  const [tab, setTab] = useState<CategoryId>("boosts");
+  const grouped = useMemo(() => {
+    const map = new Map<CategoryId, Product[]>();
+    for (const p of products) {
+      const c = categoryOf(p);
+      if (c && c !== "boosts") map.set(c, [...(map.get(c) ?? []), p]);
+    }
+    for (const [c, list] of map) map.set(c, sortProducts(list, c));
+    return map;
+  }, [products]);
+  const tabs = CATEGORIES.filter(c => c.id === "boosts" || grouped.has(c.id));
+  const current = tabs.some(t => t.id === tab) ? tab : "boosts";
   const duration = picked !== null && (status !== "ready" || available.includes(picked)) ? picked : available[0] ?? 1;
 
   return (
@@ -35,11 +52,18 @@ export function Pricing({ offers, status, demo, onRetry, showHead = true }: { of
       ) : demo ? <div className="lb-center lb-center--flag"><span className="lb-demo-flag">Demo prices — connect your Shoppex store to show real pricing</span></div> : null}
 
       <div className="lb-cats" role="tablist" aria-label="Product category" data-reveal>
-        <button type="button" role="tab" aria-selected="true"><Rocket size={16} /> Server Boosts</button>
+        {tabs.map(c => {
+          const Icon = tabIcons[c.id];
+          return <button key={c.id} type="button" role="tab" aria-selected={current === c.id} onClick={e => { setTab(c.id); e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" }); }}><Icon size={16} /> {c.label}</button>;
+        })}
       </div>
 
       {status === "error" ? (
         <div className="lb-error"><p>We couldn't load pricing right now.</p><button type="button" className="lb-btn lb-btn--ghost" onClick={onRetry}><RotateCw size={15} /> Try again</button></div>
+      ) : current !== "boosts" ? (
+        <div className="lb-items" key={current}>
+          {(grouped.get(current) ?? []).map(p => <ItemCard key={p.uniqid} product={p} category={current} demo={demo} />)}
+        </div>
       ) : (
         <div className="lb-pricing" data-reveal>
           <div className="lb-durations" role="tablist" aria-label="Plan length">

@@ -10,7 +10,7 @@ import { DiscordIcon, FaqSection, Footer, Nav, SiteBackground, useScrollReveal, 
 import { faqs, features, finalCta, hero, howItWorks, site, stats } from "@/lib/site-content";
 
 export function StorefrontHome() {
-  const { offers, demo, status, retry } = useStorefront();
+  const { products, offers, demo, status, retry } = useStorefront();
   useScrollReveal(status);
 
   return (
@@ -72,7 +72,7 @@ export function StorefrontHome() {
         </div>
       </section>
 
-      <Pricing offers={offers} status={status} demo={demo} onRetry={retry} />
+      <Pricing products={products} offers={offers} status={status} demo={demo} onRetry={retry} />
 
       <ReviewsSection />
 

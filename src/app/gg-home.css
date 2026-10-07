@@ -438,3 +438,30 @@ html:has(.lb) { scroll-padding-top: 0; }
 .lb-footer__legal-links { display: flex; gap: 18px; }
 .lb-footer__legal-links a { color: var(--faint); transition: color .2s; }
 .lb-footer__legal-links a:hover { color: var(--lime); }
+
+/* Other product categories (Nitro, accounts, members) */
+.lb-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 310px)); justify-content: center; gap: 18px; }
+.lb-item h3 { white-space: normal; font-size: 17px; line-height: 1.25; }
+.lb-item .lb-card__price { min-height: 0; margin: 22px 0 18px; padding-bottom: 18px; }
+.lb-item .lb-card__price strong { font-size: 40px; }
+.lb-item ul { margin-bottom: 22px; }
+.lb-qty { display: grid; gap: 8px; margin-bottom: 20px; }
+.lb-qty__label { color: var(--dim); font-size: 12px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+.lb-qty__ctl { display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px; border: 1px solid var(--line-2); border-radius: 12px; background: #0c0c0f; overflow: hidden; }
+.lb-qty__ctl button { display: grid; place-items: center; height: 44px; color: var(--text); transition: background .2s, color .2s; }
+.lb-qty__ctl button:hover:not(:disabled) { background: #b8ff3c14; color: var(--lime); }
+.lb-qty__ctl button:disabled { opacity: .3; cursor: not-allowed; }
+.lb-qty__ctl input { min-width: 0; width: 100%; border: 0; border-inline: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 16px; font-weight: 700; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+.lb-qty__ctl input::-webkit-outer-spin-button, .lb-qty__ctl input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.lb-qty__ctl input:focus { outline: none; background: #ffffff06; }
+.lb-qty__ctl:focus-within { border-color: #b8ff3c66; }
+.lb-qty small { color: var(--faint); font-size: 12px; }
+.lb-card.is-soldout { opacity: .55; }
+.lb-card.is-soldout:hover { transform: none; box-shadow: none; }
+.lb-card.is-soldout .lb-btn { background: #ffffff10; color: var(--dim); box-shadow: none; cursor: not-allowed; }
+@media (max-width: 680px) {
+  .lb-cats { width: 100%; max-width: 100%; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; margin-bottom: 28px; }
+  .lb-cats::-webkit-scrollbar { display: none; }
+  .lb-cats button { flex-shrink: 0; padding: 10px 14px; font-size: 14px; }
+  .lb-items { grid-template-columns: 1fr; }
+}

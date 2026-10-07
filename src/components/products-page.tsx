@@ -6,7 +6,7 @@ import { CtaBanner, FaqSection, Footer, Nav, SiteBackground, useScrollReveal, us
 import { productsFaqs, productsPage } from "@/lib/site-content";
 
 export function ProductsPage() {
-  const { offers, demo, status, retry } = useStorefront();
+  const { products, offers, demo, status, retry } = useStorefront();
   useScrollReveal(status);
 
   return (
@@ -22,7 +22,7 @@ export function ProductsPage() {
         <p className="lb-anim" style={{ animationDelay: ".2s" }}>{productsPage.body}</p>
       </header>
 
-      <Pricing offers={offers} status={status} demo={demo} onRetry={retry} showHead={false} />
+      <Pricing products={products} offers={offers} status={status} demo={demo} onRetry={retry} showHead={false} />
 
       <FaqSection id="products-faq" items={productsFaqs} title={<>Product <em>Questions</em></>} sub="Plans, warranty, delivery and payments." />
 

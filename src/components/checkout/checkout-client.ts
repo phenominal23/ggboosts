@@ -73,7 +73,9 @@ export function fieldsForLine(session: CheckoutSessionView, lineIndex = 0): Stor
 export function money(amount: string | number | null | undefined, currency: string) {
   const n = Number(amount ?? 0);
   if (!Number.isFinite(n)) return String(amount ?? "");
-  try { return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(n); }
+  // Per-unit prices like $0.015 (members) need a third decimal; everything else shows cents.
+  const digits = n > 0 && n < 1 && Math.abs(Math.round(n * 100) - n * 100) > 1e-9 ? 3 : 2;
+  try { return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase(), minimumFractionDigits: 2, maximumFractionDigits: digits }).format(n); }
   catch { return `${n.toFixed(2)} ${currency}`; }
 }
 
