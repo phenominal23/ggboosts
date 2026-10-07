@@ -1,4 +1,5 @@
 // Shared SEO helpers: the site's public URL and structured-data (JSON-LD) builders.
+import { site } from "@/lib/site-content";
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ggboosts.com").replace(/\/+$/, "");
 
 export const absolute = (path = "/") => `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
@@ -25,7 +26,7 @@ export const organizationJsonLd = {
   name: "GGBoosts",
   url: SITE_URL,
   logo: absolute("/email-logo.png"),
-  sameAs: ["https://discord.com/invite/guE3vpT4J2"],
+  sameAs: [site.supportUrl],
 };
 
 export const websiteJsonLd = {

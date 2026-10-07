@@ -3,7 +3,7 @@
 
 export const site = {
   name: "GGBoosts",
-  supportUrl: "https://discord.com/invite/guE3vpT4J2",
+  supportUrl: "https://discord.gg/Bewfk2dHzj",
 };
 
 export const hero = {
