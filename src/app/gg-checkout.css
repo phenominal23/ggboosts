@@ -203,3 +203,13 @@
   .co-address { flex-direction: column; align-items: center; }
   .co-address__fields { width: 100%; }
 }
+
+/* Coin picker under the Cryptocurrency row */
+.co-method-wrap { display: grid; gap: 8px; }
+.co-coins-pick { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 4px 32px; }
+.co-coin-btn { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px 7px 7px; border: 1px solid var(--line-2); border-radius: 999px; background: #0d0d10; color: var(--dim); font-size: 13px; font-weight: 600; transition: border-color .15s, color .15s, background .15s; }
+.co-coin-btn:hover { color: var(--text); border-color: #ffffff38; }
+.co-coin-btn.is-on { border-color: var(--lime); background: #b8ff3c10; color: var(--text); }
+.co-coin-btn .co-coin { width: 24px; height: 24px; border: 0; }
+.co-coin b { color: #fff; font-size: 11px; }
+@media (max-width: 560px) { .co-coins-pick { padding-left: 0; } }

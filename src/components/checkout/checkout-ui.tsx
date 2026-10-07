@@ -2,7 +2,7 @@
 
 import { Fragment } from "react";
 import type { CheckoutGatewayOption } from "@shoppexio/checkout-js/headless";
-import { siAmericanexpress, siApplepay, siBitcoin, siCashapp, siGooglepay, siLitecoin, siMastercard, siSolana, siTether, siVisa, type SimpleIcon } from "simple-icons";
+import { siAmericanexpress, siApplepay, siBitcoin, siCashapp, siEthereum, siGooglepay, siLitecoin, siMastercard, siSolana, siTether, siVisa, type SimpleIcon } from "simple-icons";
 import { gatewayGroup } from "@/components/checkout/checkout-client";
 
 // Small white "card" chips with real brand marks, like the ones on a payment terminal.
@@ -50,6 +50,29 @@ export function AcceptedLogos() {
       {["Visa", "Mastercard", "Amex", "Apple Pay", "Google Pay", "Cash App"].map(n => <BrandChip key={n} name={n} />)}
       <CoinStack />
     </div>
+  );
+}
+
+/** Which coin a Shoppex crypto method is (Shoppex lists each coin as its own method). */
+export function coinInfo(g: CheckoutGatewayOption): { name: string; icon: SimpleIcon | null; bg: string } {
+  const id = `${g.gateway} ${g.label}`.toLowerCase();
+  const net = id.match(/trc-?20|erc-?20|bep-?20|polygon|\bsol(ana)?\b|tron|arbitrum|base/)?.[0];
+  const netLabel = net ? ` (${net.replace("-", "").toUpperCase().replace("SOLANA", "SOL")})` : "";
+  if (/usdt|tether/.test(id)) return { name: `USDT${netLabel}`, icon: siTether, bg: "#26a17b" };
+  if (/usdc/.test(id)) return { name: `USDC${netLabel}`, icon: null, bg: "#2775ca" };
+  if (/btc|bitcoin/.test(id)) return { name: "Bitcoin", icon: siBitcoin, bg: "#f7931a" };
+  if (/ltc|litecoin/.test(id)) return { name: "Litecoin", icon: siLitecoin, bg: "#345d9d" };
+  if (/solana|\bsol\b/.test(id)) return { name: "Solana", icon: siSolana, bg: "#1b1b24" };
+  if (/ethereum|\beth\b/.test(id)) return { name: "Ethereum", icon: siEthereum, bg: "#627eea" };
+  return { name: g.presentation.button_label ?? g.label, icon: null, bg: "#3f3f46" };
+}
+
+export function CoinIcon({ g }: { g: CheckoutGatewayOption }) {
+  const c = coinInfo(g);
+  return (
+    <span className="co-coin" style={{ background: c.bg }} aria-hidden="true">
+      {c.icon ? <svg viewBox="0 0 24 24"><path d={c.icon.path} fill="#fff" /></svg> : <b>{c.name.slice(0, 1)}</b>}
+    </span>
   );
 }
 

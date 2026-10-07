@@ -9,9 +9,9 @@ import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Loader2, Lock, XCircl
 import { GGMark } from "@/components/gg-navigation";
 import { DiscordIcon, ShoppexEmbed, SiteBackground } from "@/components/home/site-chrome";
 import {
-  FAILED, PAID, SITE_URL, WAITING, fieldsForLine, forgetSession, friendlyError, getCheckoutClient, isEmail, isSetupError, money, recallSession, rememberSession, revealAttribution, usableGateways,
+  FAILED, PAID, SITE_URL, WAITING, fieldsForLine, forgetSession, friendlyError, gatewayGroup, getCheckoutClient, isEmail, isSetupError, money, recallSession, rememberSession, revealAttribution, usableGateways,
 } from "@/components/checkout/checkout-client";
-import { AcceptedLogos, methodInfo, policyLabel } from "@/components/checkout/checkout-ui";
+import { AcceptedLogos, CoinIcon, CoinStack, coinInfo, methodInfo, policyLabel } from "@/components/checkout/checkout-ui";
 import { AddressPanel, AttributionBadge, ManualPanel, SquarePanel, WaitingPanel } from "@/components/checkout/payment-panels";
 import { getCurrency, getUnitPrice, getVariant } from "@/lib/product-utils";
 import { shoppexConfig } from "@/lib/shoppex-config";
@@ -57,6 +57,7 @@ export function CheckoutPage() {
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [debug, setDebug] = useState(false);
   const [inviteHelp, setInviteHelp] = useState(false);
+  const [cryptoOpen, setCryptoOpen] = useState(false);
   const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean } | null>(null);
   const started = useRef(false);
 
@@ -93,9 +94,15 @@ export function CheckoutPage() {
         const data = await loadStorefrontData();
         const found = data.success ? data.products.find(x => x.uniqid === product) : undefined;
         if (!found) { setPhase({ name: "error", message: "We couldn't find that plan. It may have changed — please pick it again from the plans page." }); return; }
-        setPlan({ product: found, variant, priceVariant });
+        // Safety net: if this product has no checkout fields set up in Shoppex, borrow them from another
+        // boost product so we never take an order without a server invite.
+        const own = normalizeStorefrontCustomFields(found.custom_fields);
+        const donor = own.length ? null : data.success ? data.products.find(x => normalizeStorefrontCustomFields(x.custom_fields).length > 0) : undefined;
+        const chosen = donor ? { ...found, custom_fields: donor.custom_fields } : found;
+        if (donor) console.warn(`[GGBoosts] "${found.title}" has no custom fields in Shoppex — using the ones from "${donor.title}". Add them to this product in Shoppex.`);
+        setPlan({ product: chosen, variant, priceVariant });
         const defaults: Record<string, string> = {};
-        normalizeStorefrontCustomFields(found.custom_fields).forEach(f => { if (f.defaultValue) defaults[f.name] = f.defaultValue; });
+        normalizeStorefrontCustomFields(chosen.custom_fields).forEach(f => { if (f.defaultValue) defaults[f.name] = f.defaultValue; });
         setValues(defaults);
         setPhase({ name: "details" });
       } catch (e) {
@@ -181,7 +188,7 @@ export function CheckoutPage() {
     if (showTermsBox && !terms) next.terms = "Please accept the terms to continue.";
     if (needsConsent && !consent) next.consent = "Please tick this box to continue.";
     if (needsBilling) (["name", "line1", "city", "country", "postal_code"] as const).forEach(k => { if (!billing[k].trim()) next[`b:${k}`] = "Required"; });
-    if (!method) next.method = "Choose how you'd like to pay.";
+    if (!method) next.method = cryptoOpen ? "Choose which coin you'll pay with." : "Choose how you'd like to pay.";
     return showErrors(next);
   }
 
@@ -313,11 +320,15 @@ export function CheckoutPage() {
   const planPrice = plan ? getUnitPrice(plan.product, plan.variant) : 0;
   const itemTitle = view?.line_items[0]?.title ?? plan?.product.title ?? "Server Boosts";
   const itemSub = view?.line_items[0]?.variant_title ?? (plan ? getVariant(plan.product, plan.variant)?.title : null) ?? null;
-  const itemPrice = view?.line_items[0]?.unit_price ?? String(planPrice);
+  const positive = (...xs: (string | number | null | undefined)[]) => xs.find(x => Number(x) > 0);
+  const itemPrice = String(positive(view?.line_items[0]?.unit_price, view?.line_items[0]?.line_total, planPrice, view?.breakdown.subtotal) ?? 0);
   const qty = view?.line_items[0]?.quantity ?? 1;
   const total = view ? view.breakdown.total : String(planPrice);
   const step = phase.name === "details" || !view ? "details" : phase.name === "form" ? "method" : "pay";
-  const selectedInfo = selected ? methodInfo(selected) : null;
+  const selectedInfo = selected ? (gatewayGroup(selected) === "crypto" ? { title: `Pay with ${coinInfo(selected).name}` } : methodInfo(selected)) : null;
+  const cryptoGateways = gateways.filter(g => gatewayGroup(g) === "crypto");
+  const groupCrypto = cryptoGateways.length > 1;
+  const cryptoSelected = !!selected && gatewayGroup(selected) === "crypto";
 
   const orderCard = (
     <section className="co-card co-order">
@@ -498,18 +509,35 @@ export function CheckoutPage() {
       </div>
       {gateways.length === 0 && <p className="co-alert">No payment methods are available right now. Please contact support.</p>}
       <div className="co-methods" role="radiogroup" aria-label="Payment method" data-err="method">
-        {gateways.map(g => {
-          const info = methodInfo(g);
-          const fee = g.fee_preview && Number(g.fee_preview) > 0 ? g.fee_preview : null;
-          const on = method === g.gateway;
+        {gateways.filter((g, i) => !groupCrypto || gatewayGroup(g) !== "crypto" || gateways.findIndex(x => gatewayGroup(x) === "crypto") === i).map(g => {
+          const isGroup = groupCrypto && gatewayGroup(g) === "crypto";
+          const info = isGroup ? { title: "Cryptocurrency", sub: cryptoGateways.map(c => coinInfo(c).name.replace(/ \(.+\)$/, "")).filter((n, i, all) => all.indexOf(n) === i).join(", "), logos: <CoinStack /> } : methodInfo(g);
+          const fee = !isGroup && g.fee_preview && Number(g.fee_preview) > 0 ? g.fee_preview : null;
+          const on = isGroup ? cryptoOpen || cryptoSelected : method === g.gateway;
           return (
-            <button key={g.gateway} type="button" role="radio" aria-checked={on} className={`co-method ${on ? "is-on" : ""}`}
-              onClick={() => { setMethod(g.gateway); setErrors(x => ({ ...x, method: "" })); setFormError(null); }}>
-              <span className="co-radio" aria-hidden="true" />
-              {info.logos && <span className="co-method__logos">{info.logos}</span>}
-              <span className="co-method__text"><strong>{info.title}</strong>{info.sub && <small>{info.sub}</small>}</span>
-              <span className={`co-fee ${fee ? "" : "co-fee--none"}`}>{fee ? `+${money(fee, currency)} fee` : "No fee"}</span>
-            </button>
+            <div key={g.gateway} className="co-method-wrap">
+              <button type="button" role="radio" aria-checked={on} className={`co-method ${on ? "is-on" : ""}`}
+                onClick={() => {
+                  setErrors(x => ({ ...x, method: "" })); setFormError(null);
+                  if (isGroup) { setCryptoOpen(true); if (!cryptoSelected) setMethod(null); }
+                  else { setCryptoOpen(false); setMethod(g.gateway); }
+                }}>
+                <span className="co-radio" aria-hidden="true" />
+                {info.logos && <span className="co-method__logos">{info.logos}</span>}
+                <span className="co-method__text"><strong>{info.title}</strong>{info.sub && <small>{info.sub}</small>}</span>
+                <span className={`co-fee ${fee ? "" : "co-fee--none"}`}>{fee ? `+${money(fee, currency)} fee` : "No fee"}</span>
+              </button>
+              {isGroup && on && (
+                <div className="co-coins-pick" role="radiogroup" aria-label="Choose a coin">
+                  {cryptoGateways.map(c => (
+                    <button key={c.gateway} type="button" role="radio" aria-checked={method === c.gateway} className={`co-coin-btn ${method === c.gateway ? "is-on" : ""}`}
+                      onClick={() => { setMethod(c.gateway); setErrors(x => ({ ...x, method: "" })); }}>
+                      <CoinIcon g={c} /> {coinInfo(c).name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

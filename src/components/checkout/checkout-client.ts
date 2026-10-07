@@ -58,8 +58,9 @@ export function usableGateways(session: CheckoutSessionView): CheckoutGatewayOpt
 
 export function gatewayGroup(g: CheckoutGatewayOption): "card" | "crypto" | "other" {
   const id = `${g.gateway} ${g.label}`.toLowerCase();
-  if (g.kind === "address" || /crypto|bitcoin|btc|ltc|litecoin|sol|usdt|eth|wallet/.test(id)) return "crypto";
+  if (g.kind === "address") return "crypto";
   if (/square|stripe|card|nmi|sumup/.test(id)) return "card";
+  if (/crypto|bitcoin|btc|ltc|litecoin|solana|\bsol\b|usdt|usdc|ethereum|\beth\b|wallet/.test(id)) return "crypto";
   return "other";
 }
 
