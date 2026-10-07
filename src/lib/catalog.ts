@@ -36,12 +36,20 @@ export function unitName(product: Product): { one: string; many: string } {
 
 /** Sort: accounts oldest first (most valuable); members online → offline → reactions; others by price. */
 export function sortProducts(list: Product[], category: CategoryId): Product[] {
-  const year = (p: Product) => Number(p.title.match(/\b(20\d\d)\b/)?.[1] ?? 9999);
-  const rank = (p: Product) => { const t = p.title.toLowerCase(); return t.includes("online") ? 0 : t.includes("offline") ? 1 : t.includes("member") ? 2 : 3; };
+  const t = (p: Product) => p.title.toLowerCase();
+  // Accounts: Nitro accounts first, then oldest year first (most valuable).
+  const accountRank = (p: Product) => (t(p).includes("nitro") ? 0 : Number(p.title.match(/\b(20\d\d)\b/)?.[1] ?? 9999));
+  // Members: offline → online → NFT → reactions.
+  const memberRank = (p: Product) => (t(p).includes("nft") ? 2 : t(p).includes("offline") ? 0 : t(p).includes("online") ? 1 : t(p).includes("member") ? 3 : 4);
   return [...list].sort((a, b) =>
-    category === "accounts" ? year(a) - year(b)
-      : category === "members" ? rank(a) - rank(b)
+    category === "accounts" ? accountRank(a) - accountRank(b)
+      : category === "members" ? memberRank(a) - memberRank(b)
         : Number(b.price ?? 0) - Number(a.price ?? 0));
+}
+
+/** The one card per tab that gets the highlighted "Most popular" look. */
+export function isFeatured(product: Product): boolean {
+  return /^online members$/i.test(product.title.trim());
 }
 
 /** Unit prices under a dollar can have fractions of a cent ($0.015), so show up to 3 decimals. */

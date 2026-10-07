@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Product } from "@shoppexio/storefront";
 import { ArrowRight, Check, Gem, UserRound, Users } from "lucide-react";
-import { type CategoryId, unitName, unitPrice } from "@/lib/catalog";
+import { type CategoryId, isFeatured, unitName, unitPrice } from "@/lib/catalog";
 import { getCurrency, getProductHref, getUnitPrice, isSoldOut } from "@/lib/product-utils";
 
 const icons: Record<CategoryId, typeof Gem> = { boosts: Gem, nitro: Gem, accounts: UserRound, members: Users };
@@ -21,6 +21,7 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
   const currency = getCurrency(product);
   const price = getUnitPrice(product);
   const soldOut = isSoldOut(product);
+  const featured = !soldOut && isFeatured(product);
   const unit = unitName(product);
   const Icon = icons[category];
   const highlights = (product.product_highlights ?? []).map(h => h.trim()).filter(Boolean);
@@ -32,7 +33,8 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
   const symbol = formatted.replace(/[\d.,\s]/g, "");
 
   return (
-    <article className={`lb-card lb-item ${soldOut ? "is-soldout" : ""}`}>
+    <article className={`lb-card lb-item ${soldOut ? "is-soldout" : ""} ${featured ? "is-popular" : ""}`}>
+      {featured && <span className="lb-item__badge">Most popular</span>}
       <header>
         <span className="lb-card__icon"><Icon size={20} /></span>
         <div><h3>{title}</h3>{sub && <span>{sub}</span>}</div>
