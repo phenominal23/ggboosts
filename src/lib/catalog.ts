@@ -12,7 +12,11 @@ export const CATEGORIES: { id: CategoryId; label: string }[] = [
 ];
 
 export function categoryOf(product: Product): CategoryId | null {
-  const t = product.title.toLowerCase();
+  return categoryOfTitle(product.title);
+}
+
+export function categoryOfTitle(title: string): CategoryId | null {
+  const t = title.toLowerCase();
   if (/\bboosts?\b/.test(t)) return "boosts";
   if (/\bnitro\b/.test(t)) return "nitro";
   if (/\baccounts?\b/.test(t)) return "accounts";

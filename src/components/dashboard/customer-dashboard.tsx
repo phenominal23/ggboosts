@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductDescription } from "@/components/checkout/product-details";
+import { NextSteps } from "@/components/next-steps";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { HeadlessCustomerMe, HeadlessCustomerOrder, HeadlessCustomerOrderSummary } from "@shoppexio/storefront/customer";
@@ -396,7 +397,7 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
                     <span className={toneClass(ds.tone)}>{ds.label}</span>
                     {item.deliveredAt && <small>Delivered {formatDate(item.deliveredAt, true)}</small>}
                   </div>
-                  {item.deliveryStatus === "AWAITING_FULFILLMENT" && <p className="dash-note">Payment received — your order is in the queue.{instructions ? " Follow the steps below." : ""} You'll get an email the moment it's delivered.</p>}
+                  {item.deliveryStatus === "AWAITING_FULFILLMENT" && !instructions && <NextSteps productTitle={item.productTitle} orderId={order.uniqid} />}
                   {item.deliveryStatus === "FAILED" && <p className="dash-note dash-note--bad">Delivery hit a problem. Open a support ticket and we'll sort it out.</p>}
                   {deliveredParts.length > 0 && (
                     <div className="dash-delivery"><span className="dash-label">Delivery details</span>{deliveredParts.map((t, i) => <ProductDescription key={i} html={t} />)}</div>

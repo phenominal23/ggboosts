@@ -13,6 +13,7 @@ import {
 } from "@/components/checkout/checkout-client";
 import { AcceptedLogos, CoinIcon, CoinStack, coinInfo, methodInfo, policyLabel } from "@/components/checkout/checkout-ui";
 import { ProductDescription } from "@/components/checkout/product-details";
+import { NextSteps } from "@/components/next-steps";
 import { AddressPanel, AttributionBadge, ManualPanel, SquarePanel, WaitingPanel } from "@/components/checkout/payment-panels";
 import { getCurrency, getQuantityBounds, getUnitPrice, getVariant } from "@/lib/product-utils";
 import { categoryOf, unitName } from "@/lib/catalog";
@@ -320,8 +321,9 @@ export function CheckoutPage() {
   if (phase.name === "done" && view) return shell(
     <div className="co-state co-state--ok">
       <CheckCircle2 size={44} />
-      <h1>Payment received — you&apos;re all set</h1>
-      <p>Your boosts are on the way to your server. We emailed your receipt, and you can follow delivery from My Orders.</p>
+      <h1>Payment received — thank you!</h1>
+      <p>We emailed your receipt. Here&apos;s what happens next:</p>
+      <NextSteps productTitle={view.line_items[0]?.title ?? ""} orderId={view.invoice_uniqid} />
       <div className="co-done__id">Order ID <code>{view.invoice_uniqid}</code></div>
       <div className="lb-row co-state__actions">
         <Link className="lb-btn lb-btn--primary" href={`/dashboard?order=${encodeURIComponent(view.invoice_uniqid)}`}>Track my order <ArrowRight size={16} /></Link>

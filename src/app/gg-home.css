@@ -586,3 +586,11 @@ html:has(.lb) { scroll-padding-top: 0; }
 .lb-footer__grid nav a.lb-footer__all:hover { gap: 9px; }
 @media (max-width: 900px) { .lb-footer__brand { grid-column: 1 / -1; } }
 @media (max-width: 680px) { .lb-footer__grid { grid-template-columns: 1fr 1fr; gap: 36px 20px; } }
+
+/* Next steps after paying (checkout success + order page) */
+.next-steps { margin: 16px 0 6px; padding: 16px 18px; border: 1px solid #b8ff3c33; border-radius: 14px; background: #b8ff3c0a; text-align: left; }
+.next-steps__label { display: block; margin-bottom: 8px; color: var(--lime, #b8ff3c); font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+.next-steps ol { display: grid; gap: 8px; margin: 0; padding-left: 20px; list-style: decimal; color: var(--text, #f4f4f5); font-size: 14px; line-height: 1.55; }
+.next-steps li::marker { color: var(--lime, #b8ff3c); font-weight: 700; }
+.next-steps a { color: var(--lime, #b8ff3c); text-decoration: underline; text-underline-offset: 2px; }
+.next-steps code { padding: 1px 6px; border-radius: 6px; background: #ffffff10; font-size: 12.5px; word-break: break-all; }
