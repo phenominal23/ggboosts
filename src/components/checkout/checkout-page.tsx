@@ -1,16 +1,17 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { assertAttribution, HeadlessCheckoutError } from "@shoppexio/checkout-js/headless";
-import type { CheckoutGatewayOption, CheckoutPaymentSession, CheckoutSessionView, StartPaymentSessionResult } from "@shoppexio/checkout-js/headless";
+import type { CheckoutPaymentSession, CheckoutSessionView, StartPaymentSessionResult } from "@shoppexio/checkout-js/headless";
 import { buildStorefrontCustomFieldPayload, isStorefrontCheckboxCustomFieldValueChecked, normalizeStorefrontCustomFields, validateStorefrontCustomFieldValue, type Product, type StorefrontCustomField } from "@shoppexio/storefront";
-import { ArrowLeft, ArrowRight, Bitcoin, Check, CheckCircle2, CreditCard, Loader2, Lock, ShieldCheck, Tag, Wallet, XCircle, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Loader2, Lock, Mail, XCircle, Zap } from "lucide-react";
 import { GGMark } from "@/components/gg-navigation";
 import { DiscordIcon, ShoppexEmbed, SiteBackground } from "@/components/home/site-chrome";
 import {
-  FAILED, PAID, SITE_URL, WAITING, fieldsForLine, forgetSession, friendlyError, gatewayGroup, getCheckoutClient, isEmail, isSetupError, money, recallSession, rememberSession, revealAttribution, usableGateways,
+  FAILED, PAID, SITE_URL, WAITING, fieldsForLine, forgetSession, friendlyError, getCheckoutClient, isEmail, isSetupError, money, recallSession, rememberSession, revealAttribution, usableGateways,
 } from "@/components/checkout/checkout-client";
+import { AcceptedLogos, methodInfo, policyLabel } from "@/components/checkout/checkout-ui";
 import { AddressPanel, AttributionBadge, ManualPanel, SquarePanel, WaitingPanel } from "@/components/checkout/payment-panels";
 import { getCurrency, getUnitPrice, getVariant } from "@/lib/product-utils";
 import { shoppexConfig } from "@/lib/shoppex-config";
@@ -32,28 +33,11 @@ type Phase =
 type Billing = { name: string; line1: string; city: string; country: string; postal_code: string };
 const emptyBilling: Billing = { name: "", line1: "", city: "", country: "US", postal_code: "" };
 
-const URL_RE = /(https?:\/\/[^\s)]+|(?:www\.)?ggboosts\.(?:com|vercel\.app)\/[\w-]+)/g;
-function linkify(text: string) {
-  return text.split(URL_RE).map((part, i) => {
-    if (i % 2 === 0) return <Fragment key={i}>{part}</Fragment>;
-    // Point any terms/privacy/refund link at our own pages.
-    const path = part.match(/\/(terms|privacy|refund-policy)\b/)?.[0];
-    const href = path ?? (part.startsWith("http") ? part : `https://${part}`);
-    return <a key={i} href={href} target="_blank" rel="noreferrer">{path ? `${site.name} ${path.slice(1).replace("-", " ")}` : part}</a>;
-  });
-}
-
 function fieldHint(field: StorefrontCustomField) {
   const n = field.name.toLowerCase();
-  if (n.includes("invite")) return { placeholder: field.placeholder || "https://discord.gg/yourserver", help: "Set it to never expire with unlimited uses so we can deliver." };
-  if (n.includes("username")) return { placeholder: field.placeholder || "yourname", help: "So we can reach you on Discord if anything needs your attention." };
-  return { placeholder: field.placeholder, help: "" };
-}
-
-function MethodIcon({ g }: { g: CheckoutGatewayOption }) {
-  if (g.presentation.icon_url) return <img src={g.presentation.icon_url} alt="" width={22} height={22} />;
-  const group = gatewayGroup(g);
-  return group === "card" ? <CreditCard size={20} /> : group === "crypto" ? <Bitcoin size={20} /> : <Wallet size={20} />;
+  if (n.includes("invite")) return { placeholder: field.placeholder || "https://discord.gg/your-invite", label: "Permanent Discord Server Invite" };
+  if (n.includes("username")) return { placeholder: field.placeholder || "discorduser123", label: "Discord Username" };
+  return { placeholder: field.placeholder, label: field.name };
 }
 
 export function CheckoutPage() {
@@ -72,6 +56,7 @@ export function CheckoutPage() {
   const [couponOpen, setCouponOpen] = useState(false);
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [debug, setDebug] = useState(false);
+  const [inviteHelp, setInviteHelp] = useState(false);
   const [plan, setPlan] = useState<{ product: Product; variant?: string; priceVariant: boolean } | null>(null);
   const started = useRef(false);
 
@@ -144,6 +129,8 @@ export function CheckoutPage() {
   const selected = gateways.find(g => g.gateway === method) ?? null;
   const line = view?.line_items[0];
   const needsTerms = !!view && (view.terms.required || !!selected?.requirements.terms_accepted) && !view.buyer.payment_method_terms_accepted;
+  const termsCovered = fields.some(f => f.type === "checkbox" && /terms/i.test(f.name) && isStorefrontCheckboxCustomFieldValueChecked(values[f.name]));
+  const showTermsBox = needsTerms && !termsCovered;
   const needsConsent = !!view && view.withdrawal_consent.required && !view.withdrawal_consent.recorded_at;
   const needsBilling = !!view && !!selected?.requirements.billing_address && !view.buyer.billing_address_complete;
 
@@ -191,7 +178,7 @@ export function CheckoutPage() {
 
   function validate() {
     const next: Record<string, string> = {};
-    if (needsTerms && !terms) next.terms = "Please accept the terms to continue.";
+    if (showTermsBox && !terms) next.terms = "Please accept the terms to continue.";
     if (needsConsent && !consent) next.consent = "Please tick this box to continue.";
     if (needsBilling) (["name", "line1", "city", "country", "postal_code"] as const).forEach(k => { if (!billing[k].trim()) next[`b:${k}`] = "Required"; });
     if (!method) next.method = "Choose how you'd like to pay.";
@@ -321,201 +308,253 @@ export function CheckoutPage() {
     </div>,
   );
 
-  // Order summary: Shoppex's numbers once the checkout exists, catalog numbers before that.
+  // ---------- Shared pieces ----------
   const currency = view?.currency ?? getCurrency(plan?.product);
   const planPrice = plan ? getUnitPrice(plan.product, plan.variant) : 0;
-  const rows = view
-    ? view.line_items.map((l, i) => ({ key: l.line_item_id ?? String(i), title: l.title, sub: l.variant_title, total: l.line_total }))
-    : plan ? [{ key: "plan", title: plan.product.title, sub: getVariant(plan.product, plan.variant)?.title ?? null, total: String(planPrice) }] : [];
-  const totalNow = view ? view.breakdown.total : String(planPrice);
+  const itemTitle = view?.line_items[0]?.title ?? plan?.product.title ?? "Server Boosts";
+  const itemSub = view?.line_items[0]?.variant_title ?? (plan ? getVariant(plan.product, plan.variant)?.title : null) ?? null;
+  const itemPrice = view?.line_items[0]?.unit_price ?? String(planPrice);
+  const qty = view?.line_items[0]?.quantity ?? 1;
+  const total = view ? view.breakdown.total : String(planPrice);
+  const step = phase.name === "details" || !view ? "details" : phase.name === "form" ? "method" : "pay";
+  const selectedInfo = selected ? methodInfo(selected) : null;
+
+  const orderCard = (
+    <section className="co-card co-order">
+      <div className="co-order__icon"><GGMark /></div>
+      <div className="co-order__text">
+        <strong>{itemTitle}{itemSub && <span> · {itemSub}</span>}</strong>
+        <small><Zap size={12} /> Instant delivery</small>
+      </div>
+      <b className="co-order__price">{money(itemPrice, currency)}</b>
+    </section>
+  );
+
+  const cta = step === "details"
+    ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Saving…</> : <>Continue to payment <ArrowRight size={17} /></>}</button>
+    : step === "method"
+      ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy || gateways.length === 0}>{busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : selected ? <>Pay {money(total, currency)} <ArrowRight size={17} /></> : <>Choose a payment method</>}</button>
+      : null;
+
   const summary = (
-    <aside className="co-summary" aria-label="Order summary">
-      <span className="co-label">Your order</span>
-      {rows.map(r => (
-        <div key={r.key} className="co-item">
-          <div className="co-item__icon"><GGMark /></div>
-          <div className="co-item__text">
-            <strong>{r.title}</strong>
-            {r.sub && <span>{r.sub}</span>}
-          </div>
-          <b>{money(r.total, currency)}</b>
+    <aside className="co-side">
+      <section className="co-card co-sum">
+        <div className="co-sum__head">
+          <h2>Order summary</h2>
+          <p>{step === "details" ? "Fill in your details to continue" : step === "method" ? "Choose how you'd like to pay" : "Finish your payment"}</p>
         </div>
-      ))}
-      <dl className="co-totals">
-        <div><dt>Subtotal</dt><dd>{money(view ? view.breakdown.subtotal : planPrice, currency)}</dd></div>
-        {view?.breakdown.discount && Number(view.breakdown.discount) > 0 && <div className="co-totals__disc"><dt>Discount</dt><dd>−{money(view.breakdown.discount, currency)}</dd></div>}
-        {view?.breakdown.tax && Number(view.breakdown.tax) > 0 && <div><dt>Tax</dt><dd>{money(view.breakdown.tax, currency)}</dd></div>}
-        {view?.breakdown.fee && Number(view.breakdown.fee) > 0 && <div><dt>Processing fee</dt><dd>{money(view.breakdown.fee, currency)}</dd></div>}
-        <div className="co-totals__total"><dt>Total</dt><dd>{money(totalNow, currency)}</dd></div>
-      </dl>
-      {phase.name === "form" && (
-        couponOpen ? (
-          <form className="co-coupon" onSubmit={e => { e.preventDefault(); if (coupon.trim()) void applyCoupon(coupon.trim()); }}>
-            <input value={coupon} onChange={e => setCoupon(e.target.value)} placeholder="Coupon code" aria-label="Coupon code" autoFocus />
-            <button type="submit" className="lb-btn lb-btn--ghost">Apply</button>
-          </form>
-        ) : (
-          <button type="button" className="co-textlink" onClick={() => setCouponOpen(true)}><Tag size={14} /> Have a coupon?</button>
-        )
-      )}
-      {couponMsg && <p className={couponMsg.ok ? "co-ok" : "co-error"}>{couponMsg.text}{couponMsg.ok && <> · <button type="button" className="co-textlink" onClick={() => void applyCoupon(null)}>Remove</button></>}</p>}
-      <ul className="co-perks">
-        <li><Zap size={15} /> Delivery starts once payment clears</li>
-        <li><ShieldCheck size={15} /> Warranty on every order</li>
-        <li><Check size={15} /> One-time payment, nothing renews</li>
-      </ul>
+        <dl className="co-sum__rows">
+          <div><dt>Item price</dt><dd>{money(itemPrice, currency)}</dd></div>
+          <div><dt>Quantity</dt><dd>{qty} item{qty === 1 ? "" : "s"}</dd></div>
+          {view?.breakdown.discount && Number(view.breakdown.discount) > 0 && <div className="is-disc"><dt>Discount</dt><dd>−{money(view.breakdown.discount, currency)}</dd></div>}
+          {view?.breakdown.tax && Number(view.breakdown.tax) > 0 && <div><dt>Tax</dt><dd>{money(view.breakdown.tax, currency)}</dd></div>}
+          {view?.breakdown.fee && Number(view.breakdown.fee) > 0 && <div><dt>Processing fee</dt><dd>{money(view.breakdown.fee, currency)}</dd></div>}
+        </dl>
+        <div className="co-sum__total">
+          <span>Order total</span>
+          <strong>{money(total, currency)}</strong>
+          {step !== "pay" && <small>Any payment fee is shown before you pay.</small>}
+        </div>
+        {cta && <div className="co-sum__cta">{cta}</div>}
+        {step === "method" && (
+          <div className="co-sum__coupon">
+            {couponOpen ? (
+              <form className="co-coupon" onSubmit={e => { e.preventDefault(); if (coupon.trim()) void applyCoupon(coupon.trim()); }}>
+                <input value={coupon} onChange={e => setCoupon(e.target.value)} placeholder="Discount code" aria-label="Discount code" autoFocus />
+                <button type="submit" className="lb-btn lb-btn--ghost">Apply</button>
+              </form>
+            ) : (
+              <button type="button" className="co-link" onClick={() => setCouponOpen(true)}>Add a discount code</button>
+            )}
+            {couponMsg && <p className={couponMsg.ok ? "co-ok" : "co-bad"}>{couponMsg.text}{couponMsg.ok && <> · <button type="button" className="co-link" onClick={() => void applyCoupon(null)}>Remove</button></>}</p>}
+          </div>
+        )}
+        {step === "method" && view && <div className="co-sum__attrib"><AttributionBadge attribution={view.attribution} /></div>}
+        {step === "details" && <p className="co-sum__secure"><Lock size={12} /> Secure checkout · nothing is charged yet</p>}
+        <div className="co-sum__accept">
+          <span>We accept</span>
+          <AcceptedLogos />
+        </div>
+      </section>
+      <section className="co-card co-help">
+        <h2>Need help?</h2>
+        <p>We&apos;re on Discord before and after you pay.</p>
+        <div className="co-help__btns">
+          <a className="co-help__btn co-help__btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord</a>
+          <a className="co-help__btn" href={`mailto:${site.supportEmail}`}><Mail size={15} /> Email</a>
+        </div>
+      </section>
     </aside>
   );
 
-  // ---------- Step 1: details (no Shoppex checkout yet) ----------
-  if (phase.name === "details" || !view) return shell(
-    <div className="co-grid">
-      <form className="co-main" noValidate onSubmit={e => { e.preventDefault(); void createCheckout(); }}>
-        <h1 className="co-h1">Checkout</h1>
-        <p className="co-muted">Tell us where to send your boosts. You&apos;ll choose how to pay next.</p>
+  const page = (main: React.ReactNode) => shell(
+    <>
+      <h1 className="co-h1">Checkout</h1>
+      <div className="co-grid">
+        <div className="co-main">{orderCard}{main}</div>
+        {summary}
+      </div>
+    </>,
+  );
 
-        <fieldset className="co-section">
-          <legend><span>1</span> Contact</legend>
-          <label className="co-field" data-err="email">
-            <span>Email</span>
+  // ---------- Step 1: details (no Shoppex checkout yet) ----------
+  if (step === "details") {
+    const text = fields.filter(f => f.type !== "checkbox");
+    const boxes = fields.filter(f => f.type === "checkbox");
+    return page(
+      <form id="co-form" className="co-card" noValidate onSubmit={e => { e.preventDefault(); void createCheckout(); }}>
+        <div className="co-card__head">
+          <h2>Delivery details</h2>
+          <p>We send your receipt and order link here the moment your payment clears.</p>
+        </div>
+        <div className="co-fields">
+          <label className="co-field co-field--half" data-err="email">
+            <span>Email address <i>*</i></span>
             <input type="email" autoComplete="email" inputMode="email" value={email} placeholder="you@example.com" aria-invalid={!!errors.email}
               onChange={e => { setEmail(e.target.value); setErrors(x => ({ ...x, email: "" })); }} />
-            <small>Your receipt and order link are sent here.</small>
             {errors.email && <em role="alert">{errors.email}</em>}
           </label>
-        </fieldset>
-
-        {fields.length > 0 && (
-          <fieldset className="co-section">
-            <legend><span>2</span> Your server</legend>
-            {fields.filter(f => f.type !== "checkbox").map(f => {
-              const hint = fieldHint(f);
-              const err = errors[`f:${f.name}`];
-              return (
-                <label key={f.name} className="co-field" data-err={`f:${f.name}`}>
-                  <span>{f.name}{f.required && <i aria-hidden="true"> *</i>}</span>
-                  {f.type === "textarea"
-                    ? <textarea rows={3} value={values[f.name] ?? ""} placeholder={hint.placeholder} aria-invalid={!!err} onChange={e => setField(f.name, e.target.value)} />
-                    : <input value={values[f.name] ?? ""} placeholder={hint.placeholder} aria-invalid={!!err} autoComplete="off" spellCheck={false} onChange={e => setField(f.name, e.target.value)} />}
-                  {hint.help && <small>{hint.help}</small>}
-                  {err && <em role="alert">{err}</em>}
-                </label>
-              );
-            })}
-            {fields.filter(f => f.type === "checkbox").map(f => {
+          <div className="co-field--break" />
+          {text.map(f => {
+            const hint = fieldHint(f);
+            const err = errors[`f:${f.name}`];
+            return (
+              <label key={f.name} className={`co-field ${text.length > 1 ? "co-field--half" : ""}`} data-err={`f:${f.name}`}>
+                <span>{hint.label}{f.required && <i> *</i>}</span>
+                {f.type === "textarea"
+                  ? <textarea rows={3} value={values[f.name] ?? ""} placeholder={hint.placeholder} aria-invalid={!!err} onChange={e => setField(f.name, e.target.value)} />
+                  : <input value={values[f.name] ?? ""} placeholder={hint.placeholder} aria-invalid={!!err} autoComplete="off" spellCheck={false} onChange={e => setField(f.name, e.target.value)} />}
+                {err && <em role="alert">{err}</em>}
+              </label>
+            );
+          })}
+        </div>
+        {text.some(f => f.name.toLowerCase().includes("invite")) && (
+          <div className="co-howto">
+            <button type="button" className="co-howto__toggle" aria-expanded={inviteHelp} onClick={() => setInviteHelp(o => !o)}>How do I make a permanent invite? <ChevronDown size={14} /></button>
+            {inviteHelp && (
+              <ol>
+                <li>In Discord, right-click your server icon → <b>Invite People</b>.</li>
+                <li>Click <b>Edit invite link</b> at the bottom.</li>
+                <li>Set <b>Expire After</b> to <b>Never</b> and <b>Max Number of Uses</b> to <b>No limit</b>, then copy the link.</li>
+              </ol>
+            )}
+          </div>
+        )}
+        {boxes.length > 0 && (
+          <div className="co-checks">
+            {boxes.map(f => {
               const err = errors[`f:${f.name}`];
               return (
                 <label key={f.name} className={`co-check ${err ? "is-bad" : ""}`} data-err={`f:${f.name}`}>
                   <input type="checkbox" checked={isStorefrontCheckboxCustomFieldValueChecked(values[f.name])} onChange={e => setField(f.name, e.target.checked ? "true" : "")} />
-                  <span>{linkify(f.name)}{err && <em role="alert">{err}</em>}</span>
+                  <span>{policyLabel(f.name)}{f.required && <i> *</i>}</span>
                 </label>
               );
             })}
-          </fieldset>
+            {boxes.some(f => errors[`f:${f.name}`]) && <em className="co-err" role="alert">Please tick all the boxes above to continue.</em>}
+          </div>
         )}
-
-        {formError && <p className="co-error" role="alert">{formError}</p>}
-        <button type="submit" className="lb-btn lb-btn--primary lb-btn--lg co-full" disabled={busy}>
-          {busy ? <><Loader2 size={17} className="co-spin" /> Saving…</> : <>Continue <ArrowRight size={17} /></>}
-        </button>
+        {formError && <p className="co-alert" role="alert">{formError}</p>}
         {debug && plan && <pre className="co-debug">{JSON.stringify({ product: plan.product.uniqid, variant: plan.variant, fields: plan.product.custom_fields }, null, 2)}</pre>}
-      </form>
-      {summary}
-    </div>,
-  );
+      </form>,
+    );
+  }
+
+  if (!view) return null;
 
   // ---------- Step 3: pay ----------
-  if (phase.name === "pay" || phase.name === "failed" || phase.name === "waiting") {
+  if (step === "pay") {
     const p = phase.name === "pay" ? phase.payment : null;
     let panel: React.ReactNode;
     if (phase.name === "waiting") panel = <WaitingPanel />;
-    else if (phase.name === "failed") panel = <div className="co-pay"><p className="co-error" role="alert">{phase.message}</p></div>;
+    else if (phase.name === "failed") panel = <p className="co-alert" role="alert">{phase.message}</p>;
     else if (p?.kind === "embed" && p.provider === "square") panel = <SquarePanel view={view} payment={p} email={email} onResult={r => handleStart(view, r)} />;
     else if (p?.kind === "address") panel = <AddressPanel view={view} payment={p} />;
     else if (p?.kind === "manual") panel = <ManualPanel payment={p} />;
     else if (p?.kind === "final") panel = <WaitingPanel />;
-    else panel = <div className="co-pay"><p className="co-error">This payment method isn&apos;t available on this page yet. Please go back and pick another one.</p></div>;
-    return shell(
-      <div className="co-grid">
-        <section className="co-main">
-          <button type="button" className="co-back" onClick={() => { setPhase({ name: "form" }); setFormError(null); }}><ArrowLeft size={15} /> Change payment method</button>
-          <h1 className="co-h1">Complete your payment</h1>
-          <p className="co-muted">Paying with <b>{selected?.presentation.button_label ?? selected?.label ?? "your selected method"}</b>{email && <> · receipt to {email}</>}</p>
-          {panel}
-          <div className="co-attrib-row"><AttributionBadge attribution={view.attribution} /></div>
-        </section>
-        {summary}
-      </div>,
+    else panel = <p className="co-alert">This payment method isn&apos;t available here yet. Go back and pick another one.</p>;
+    return page(
+      <section className="co-card">
+        <div className="co-card__head co-card__head--row">
+          <div>
+            <h2>{selectedInfo?.title ?? "Payment"}</h2>
+            {email && <p>Receipt to {email}</p>}
+          </div>
+          <button type="button" className="co-link" onClick={() => { setPhase({ name: "form" }); setFormError(null); }}>Change method</button>
+        </div>
+        {panel}
+        <div className="co-attrib-row"><AttributionBadge attribution={view.attribution} /></div>
+      </section>,
     );
   }
 
   // ---------- Step 2: payment method ----------
-  const invite = fields.find(f => f.name.toLowerCase().includes("invite"));
-  return shell(
-    <div className="co-grid">
-      <form className="co-main" noValidate onSubmit={e => { e.preventDefault(); void startPayment(); }}>
-        {plan && <button type="button" className="co-back" onClick={() => { setView(null); setMethod(null); setPhase({ name: "details" }); setFormError(null); }}><ArrowLeft size={15} /> Edit details</button>}
-        <h1 className="co-h1">Payment</h1>
-        {email && <p className="co-muted">Receipt to <b>{email}</b>{invite && values[invite.name] && <> · delivering to <b>{values[invite.name]}</b></>}</p>}
+  return page(
+    <form id="co-form" className="co-card" noValidate onSubmit={e => { e.preventDefault(); void startPayment(); }}>
+      <div className="co-card__head co-card__head--row">
+        <div>
+          <h2>Payment method</h2>
+          {email && <p>Receipt to {email}</p>}
+        </div>
+        {plan && <button type="button" className="co-link" onClick={() => { setView(null); setMethod(null); setPhase({ name: "details" }); setFormError(null); }}>Edit details</button>}
+      </div>
+      {gateways.length === 0 && <p className="co-alert">No payment methods are available right now. Please contact support.</p>}
+      <div className="co-methods" role="radiogroup" aria-label="Payment method" data-err="method">
+        {gateways.map(g => {
+          const info = methodInfo(g);
+          const fee = g.fee_preview && Number(g.fee_preview) > 0 ? g.fee_preview : null;
+          const on = method === g.gateway;
+          return (
+            <button key={g.gateway} type="button" role="radio" aria-checked={on} className={`co-method ${on ? "is-on" : ""}`}
+              onClick={() => { setMethod(g.gateway); setErrors(x => ({ ...x, method: "" })); setFormError(null); }}>
+              <span className="co-radio" aria-hidden="true" />
+              {info.logos && <span className="co-method__logos">{info.logos}</span>}
+              <span className="co-method__text"><strong>{info.title}</strong>{info.sub && <small>{info.sub}</small>}</span>
+              <span className={`co-fee ${fee ? "" : "co-fee--none"}`}>{fee ? `+${money(fee, currency)} fee` : "No fee"}</span>
+            </button>
+          );
+        })}
+      </div>
+      {errors.method && <em className="co-err" role="alert">{errors.method}</em>}
 
-        <fieldset className="co-section">
-          <legend><span>{fields.length > 0 ? 3 : 2}</span> Payment method</legend>
-          {gateways.length === 0 && <p className="co-error">No payment methods are available right now. Please contact support.</p>}
-          <div className="co-methods" role="radiogroup" aria-label="Payment method" data-err="method">
-            {gateways.map(g => {
-              const fee = g.fee_preview && Number(g.fee_preview) > 0 ? g.fee_preview : null;
-              return (
-                <button key={g.gateway} type="button" role="radio" aria-checked={method === g.gateway} className={`co-method ${method === g.gateway ? "is-selected" : ""}`}
-                  onClick={() => { setMethod(g.gateway); setErrors(x => ({ ...x, method: "" })); }}>
-                  <span className="co-method__icon"><MethodIcon g={g} /></span>
-                  <span className="co-method__text"><strong>{g.presentation.button_label ?? g.label}</strong>{fee && <small>+{money(fee, currency)} fee</small>}</span>
-                  <span className="co-method__radio">{method === g.gateway && <Check size={13} strokeWidth={3} />}</span>
-                </button>
-              );
-            })}
+      {needsBilling && (
+        <div className="co-billing">
+          <span className="co-mini">Billing address</span>
+          <div className="co-fields">
+            {([["name", "Name on card", "name"], ["line1", "Address", "address-line1"], ["city", "City", "address-level2"], ["postal_code", "ZIP / Postal code", "postal-code"], ["country", "Country code (e.g. US)", "country"]] as const).map(([k, label, ac]) => (
+              <label key={k} className={`co-field ${k === "name" || k === "line1" ? "" : "co-field--half"}`} data-err={`b:${k}`}>
+                <span>{label}</span>
+                <input autoComplete={ac} value={billing[k]} maxLength={k === "country" ? 2 : undefined} aria-invalid={!!errors[`b:${k}`]} onChange={e => setBilling(b => ({ ...b, [k]: e.target.value }))} />
+                {errors[`b:${k}`] && <em role="alert">{errors[`b:${k}`]}</em>}
+              </label>
+            ))}
           </div>
-          {errors.method && <em className="co-inline-err" role="alert">{errors.method}</em>}
+        </div>
+      )}
 
-          {needsBilling && (
-            <div className="co-billing">
-              <span className="co-label">Billing address</span>
-              <div className="co-billing__grid">
-                {([["name", "Name on card", "name"], ["line1", "Address", "address-line1"], ["city", "City", "address-level2"], ["postal_code", "ZIP / Postal code", "postal-code"], ["country", "Country (2 letters, e.g. US)", "country"]] as const).map(([k, label, ac]) => (
-                  <label key={k} className={`co-field ${k === "name" || k === "line1" ? "co-field--wide" : ""}`} data-err={`b:${k}`}>
-                    <span>{label}</span>
-                    <input autoComplete={ac} value={billing[k]} maxLength={k === "country" ? 2 : undefined} aria-invalid={!!errors[`b:${k}`]} onChange={e => setBilling(b => ({ ...b, [k]: e.target.value }))} />
-                    {errors[`b:${k}`] && <em role="alert">{errors[`b:${k}`]}</em>}
-                  </label>
-                ))}
-              </div>
-            </div>
+      {(showTermsBox || needsConsent) && (
+        <div className="co-checks">
+          {showTermsBox && (
+            <label className={`co-check ${errors.terms ? "is-bad" : ""}`} data-err="terms">
+              <input type="checkbox" checked={terms} onChange={e => { setTerms(e.target.checked); setErrors(x => ({ ...x, terms: "" })); }} />
+              <span>I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> and <a href="/refund-policy" target="_blank" rel="noreferrer">Refund Policy</a>.</span>
+            </label>
           )}
-        </fieldset>
+          {needsConsent && (
+            <label className={`co-check ${errors.consent ? "is-bad" : ""}`} data-err="consent">
+              <input type="checkbox" checked={consent} onChange={e => { setConsent(e.target.checked); setErrors(x => ({ ...x, consent: "" })); }} />
+              <span>{view.withdrawal_consent.text}</span>
+            </label>
+          )}
+          {(errors.terms || errors.consent) && <em className="co-err" role="alert">Please tick the box above to continue.</em>}
+        </div>
+      )}
 
-        {needsTerms && (
-          <label className={`co-check ${errors.terms ? "is-bad" : ""}`} data-err="terms">
-            <input type="checkbox" checked={terms} onChange={e => { setTerms(e.target.checked); setErrors(x => ({ ...x, terms: "" })); }} />
-            <span>I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a> and <a href="/refund-policy" target="_blank" rel="noreferrer">Refund Policy</a>.{errors.terms && <em role="alert">{errors.terms}</em>}</span>
-          </label>
-        )}
-        {needsConsent && (
-          <label className={`co-check ${errors.consent ? "is-bad" : ""}`} data-err="consent">
-            <input type="checkbox" checked={consent} onChange={e => { setConsent(e.target.checked); setErrors(x => ({ ...x, consent: "" })); }} />
-            <span>{view.withdrawal_consent.text}{errors.consent && <em role="alert">{errors.consent}</em>}</span>
-          </label>
-        )}
-
-        {formError && <p className="co-error" role="alert">{formError}</p>}
-        <button type="submit" className="lb-btn lb-btn--primary lb-btn--lg co-full" disabled={busy || gateways.length === 0}>
-          {busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : <>Continue to payment · {money(view.breakdown.total, currency)} <ArrowRight size={17} /></>}
-        </button>
-        <div className="co-attrib-row"><AttributionBadge attribution={view.attribution} /></div>
-
-        {debug && (
-          <pre className="co-debug">{JSON.stringify({ gateways: view.gateways_available, fields: line?.custom_fields_config, saved: line?.custom_fields, terms: view.terms, buyer: view.buyer, consent: view.withdrawal_consent }, null, 2)}</pre>
-        )}
-      </form>
-      {summary}
-    </div>,
+      {formError && <p className="co-alert" role="alert">{formError}</p>}
+      {debug && (
+        <pre className="co-debug">{JSON.stringify({ gateways: view.gateways_available, fields: line?.custom_fields_config, saved: line?.custom_fields, terms: view.terms, buyer: view.buyer, consent: view.withdrawal_consent }, null, 2)}</pre>
+      )}
+    </form>,
   );
 }
