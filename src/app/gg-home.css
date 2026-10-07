@@ -465,3 +465,8 @@ html:has(.lb) { scroll-padding-top: 0; }
   .lb-cats button { flex-shrink: 0; padding: 10px 14px; font-size: 14px; }
   .lb-items { grid-template-columns: 1fr; }
 }
+
+/* Step 1 picture: looks like the checkout, but can't be clicked */
+.mock--static { pointer-events: none; user-select: none; }
+.mock__stepper > .mock__btn { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #ffffff10; font-weight: 400; }
+.mock--static .lb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }

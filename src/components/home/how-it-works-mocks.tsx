@@ -2,13 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAnimationGate } from "@/components/home/use-animation-gate";
-import { Bitcoin, Check, ChevronDown, CreditCard, DollarSign, Minus, Plus } from "lucide-react";
+import { ArrowRight, Bitcoin, Check, ChevronDown, CreditCard, DollarSign, Minus, Plus } from "lucide-react";
 import type { BoostOffer } from "@/lib/boost-offers";
 import { formatDuration } from "@/lib/boost-packages";
-import { COUNTS, DURATIONS, findOffer, money } from "@/lib/pricing-helpers";
+import { findOffer, money } from "@/lib/pricing-helpers";
 import { getCurrency } from "@/lib/product-utils";
 import { paymentOptions, site } from "@/lib/site-content";
-import { BuyButton } from "@/components/home/buy-button";
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -22,30 +21,27 @@ function useReducedMotion() {
   return reduced;
 }
 
-export function CheckoutMock({ offers, demo }: { offers: BoostOffer[]; demo: boolean }) {
-  const [countIdx, setCountIdx] = useState(2);
-  const [duration, setDuration] = useState(3);
-  const count = COUNTS[countIdx];
+// Display-only picture of step 1. Nothing here is clickable — buying happens in the pricing section.
+export function CheckoutMock({ offers }: { offers: BoostOffer[]; demo?: boolean }) {
+  const count = 20;
+  const duration = 3;
   const offer = findOffer(offers, count, duration);
   return (
-    <div className="mock mock--checkout">
+    <div className="mock mock--checkout mock--static" aria-hidden="true" inert>
       <strong className="mock__title">Checkout</strong>
       <div className="mock__crumbs"><span>Select Plan</span> › Payment</div>
       <div className="mock__row mock__stepper">
-        <button type="button" aria-label="Fewer boosts" onClick={() => setCountIdx(i => Math.max(0, i - 1))} disabled={countIdx === 0}><Minus size={14} /></button>
-        <output aria-live="polite">{count}</output>
-        <button type="button" aria-label="More boosts" onClick={() => setCountIdx(i => Math.min(COUNTS.length - 1, i + 1))} disabled={countIdx === COUNTS.length - 1}><Plus size={14} /></button>
+        <span className="mock__btn"><Minus size={14} /></span>
+        <output>{count}</output>
+        <span className="mock__btn"><Plus size={14} /></span>
         <span>Server Boosts</span>
       </div>
-      <label className="mock__row mock__select">
+      <div className="mock__row mock__select">
         <span>Duration</span>
         <strong>{formatDuration(duration)} <ChevronDown size={14} /></strong>
-        <select aria-label="Duration" value={duration} onChange={e => setDuration(Number(e.target.value))}>
-          {DURATIONS.map(d => <option key={d} value={d}>{formatDuration(d)}</option>)}
-        </select>
-      </label>
+      </div>
       <div className="mock__subtotal"><span>Subtotal</span><strong>{offer ? money(offer.price, getCurrency(offer.product)) : "—"}</strong></div>
-      <BuyButton offer={offer} demo={demo} label="Checkout" className="lb-btn lb-btn--primary lb-btn--sm" />
+      <span className="lb-btn lb-btn--primary lb-btn--sm">Checkout <ArrowRight size={15} /></span>
     </div>
   );
 }
