@@ -355,8 +355,7 @@ export function CheckoutPage() {
   const qtyStep = bounds.min >= 100 ? 100 : 1;
   const setQty = (n: number) => setPlan(p => (p ? { ...p, quantity: Math.min(qtyMax, Math.max(bounds.min, Math.round(n) || bounds.min)) } : p));
   const description = plan?.product.description?.trim() ?? "";
-  const highlights = (plan?.product.product_highlights ?? []).map(h => h.trim()).filter(Boolean);
-  const hasDetails = !!description || highlights.length > 0;
+  const hasDetails = !!description;
 
   const orderCard = (
     <section className="co-card co-order-wrap">
@@ -384,7 +383,6 @@ export function CheckoutPage() {
           <button type="button" className="co-details__toggle" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(o => !o)}>Product details <ChevronDown size={16} /></button>
           {detailsOpen && (
             <div className="co-details__body">
-              {highlights.length > 0 && <ul className="co-details__hl">{highlights.map(h => <li key={h}>{h}</li>)}</ul>}
               {description && <ProductDescription html={description} />}
             </div>
           )}

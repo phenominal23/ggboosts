@@ -246,3 +246,8 @@
   .co-qty { order: 3; margin-left: 62px; }
   .co-qty + .co-order__price { order: 4; margin-left: auto; }
 }
+.co-desc h4 { margin-top: 14px; color: var(--text); font-size: 14px; font-weight: 700; }
+.co-desc h4:first-child { margin-top: 0; }
+.co-desc ul { display: grid; gap: 6px; padding-left: 18px; }
+.co-desc h4 + ul { margin-top: 8px; }
+.co-desc li::marker { color: var(--lime); }
