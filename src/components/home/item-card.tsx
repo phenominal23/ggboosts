@@ -22,7 +22,8 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
   const currency = getCurrency(product);
   const price = getUnitPrice(product);
   const { min, max } = getQuantityBounds(product);
-  const top = max > 0 ? max : 9999;
+  const bounded = max > 0; // no max set in Shoppex = no limit
+  const top = bounded ? max : Number.MAX_SAFE_INTEGER;
   const step = min >= 100 ? 100 : 1;
   const bulk = min >= 100;
   const [qty, setQty] = useState(min);
@@ -32,7 +33,7 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
   const clamp = (n: number) => Math.min(top, Math.max(min, Math.round(n)));
   const total = price * qty;
   const href = demo ? getProductHref(product) : `/checkout?${new URLSearchParams({ product: product.uniqid, qty: String(qty) })}`;
-  const single = min === 1 && max === 1;
+  const single = min === 1 && top === 1;
 
   return (
     <article className={`lb-card lb-item ${soldOut ? "is-soldout" : ""}`}>
@@ -43,7 +44,7 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
 
       <div className="lb-card__price">
         <strong><sup>$</sup>{money(single || !bulk ? price : total, currency).replace("$", "")}</strong>
-        <span>{bulk ? `for ${qty.toLocaleString()} ${unit.many}` : single ? "One-time payment" : `per ${unit.one} · up to ${top} per order`}</span>
+        <span>{bulk ? `for ${qty.toLocaleString()} ${unit.many}` : single ? "One-time payment" : bounded ? `per ${unit.one} · up to ${top} per order` : `per ${unit.one}`}</span>
       </div>
 
       {!single && !soldOut && (
@@ -51,11 +52,11 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
           <span className="lb-qty__label">Quantity</span>
           <div className="lb-qty__ctl">
             <button type="button" aria-label="Less" disabled={qty <= min} onClick={() => setQty(q => clamp(q - step))}><Minus size={15} /></button>
-            <input type="number" inputMode="numeric" min={min} max={top} step={step} value={qty} aria-label={`Number of ${unit.many}`}
+            <input type="number" inputMode="numeric" min={min} max={bounded ? top : undefined} step={step} value={qty} aria-label={`Number of ${unit.many}`}
               onChange={e => setQty(Number(e.target.value) || min)} onBlur={() => setQty(q => clamp(q))} />
             <button type="button" aria-label="More" disabled={qty >= top} onClick={() => setQty(q => clamp(q + step))}><Plus size={15} /></button>
           </div>
-          <small>Min {min.toLocaleString()} · Max {top.toLocaleString()}{!bulk && qty > 1 ? ` · Total ${money(total, currency)}` : ""}</small>
+          <small>{bounded ? `Min ${min.toLocaleString()} · Max ${top.toLocaleString()}` : `Min ${min.toLocaleString()}`}{!bulk && qty > 1 ? ` · Total ${money(total, currency)}` : ""}</small>
         </div>
       )}
 

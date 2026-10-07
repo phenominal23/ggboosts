@@ -44,3 +44,4 @@ export function unitPrice(value: number, currency = "USD") {
   const digits = value > 0 && value < 1 && Math.round(value * 100) !== value * 100 ? 3 : 2;
   return new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: digits }).format(value);
 }
+
