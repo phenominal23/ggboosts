@@ -44,7 +44,7 @@ export const categoryPages: CategoryPage[] = [
       ["Do I need to turn anything off?", "Yes — pause anti-raid bots, join protection and server applications until your order is delivered, and don't kick or ban delivered members."],
       ["What's the minimum order?", "200 online or offline members, or 100 reactions. The quantity picker shows the range for each product."],
     ],
-    guides: ["online-vs-offline-discord-members", "how-to-make-a-permanent-discord-invite", "how-to-copy-a-discord-message-link"],
+    guides: ["online-vs-offline-discord-members", "how-to-make-a-permanent-discord-invite", "how-to-find-your-discord-server-id"],
     cta: { title: "Make your server look alive.", body: "Pick an amount, paste your invite, and you're done." },
   },
   {

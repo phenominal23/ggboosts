@@ -7,7 +7,7 @@ import { guides } from "@/lib/guides";
 import { absolute, breadcrumbJsonLd } from "@/lib/seo";
 
 const title = "Discord Guides — Boosts, Invites, Members & Accounts";
-const description = "Plain-English Discord guides: boost levels and perks, Nitro vs buying boosts, permanent invite links, message links, members and aged accounts.";
+const description = "Plain-English Discord guides: boost levels and perks, Nitro vs buying boosts, permanent invite links, server IDs, members and aged accounts.";
 
 export const metadata: Metadata = {
   title,
