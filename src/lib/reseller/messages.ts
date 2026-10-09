@@ -22,7 +22,13 @@ export function deliveredText(title: string, serials: string[]): string {
   return `✅ Your ${title} order has been delivered!\n\nCheck your server — it can take a few minutes for Discord to update. You can remove the delivery bot now and turn your anti-raid settings back on. Don't kick or ban delivered members.\n\n${HELP}`;
 }
 
-/** Whether an order can be completed without content from Liteboosts (e.g. boosts/members are delivered to the server). */
+/**
+ * Whether we can tell the customer "delivered" as soon as Liteboosts marks its order delivered.
+ * Members/reactions: NO — Liteboosts marks those "delivered" right away, before any members join
+ * (the bot/ticket step still has to happen), so they're always finished by hand.
+ */
 export function canAutoComplete(title: string, serials: string[]) {
-  return serials.length > 0 || kindOf(title) === "boosts" || kindOf(title) === "members";
+  const kind = kindOf(title);
+  if (kind === "members") return false;
+  return kind === "boosts" || serials.length > 0;
 }

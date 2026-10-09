@@ -61,7 +61,7 @@ async function run(req: Request) {
 
       const serials = lines.flatMap(l => l.serials ?? []);
       if (!canAutoComplete(p.title, serials)) {
-        await alert("📦 Liteboosts delivered, but sent no details — check their order page and fulfill by hand", info, 0x38bdf8);
+        await alert("📦 Liteboosts finished — fulfill this one by hand", { ...info, "Liteboosts sent": serials.join("\n").slice(0, 900) || "nothing" }, 0x38bdf8);
         await removePending(p.lbOrderId);
         result.manual++;
         continue;

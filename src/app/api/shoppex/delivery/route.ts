@@ -87,6 +87,11 @@ export async function POST(req: Request) {
       await alert("✅ Auto-delivered", lbInfo);
       return NextResponse.json({ data: { service_text: deliveredText(title, serials), dynamic_response: serials.length ? { codes: serials } : { status: "sent" }, deliveryType: "DYNAMIC", count: Math.max(1, serials.length) } });
     }
+    // Delivered by Liteboosts but not something we can hand over automatically (e.g. members): finish by hand.
+    if (allDelivered) {
+      await alert("📦 Ordered on Liteboosts — finish this one by hand", { ...lbInfo, "Liteboosts sent": serials.join("\n").slice(0, 900) || "nothing", Next: "Check the order on Liteboosts, then fulfill it in Shoppex" }, 0x38bdf8);
+      return pending();
+    }
     // Remember the order so the auto-complete check (/api/cron/complete) can finish it later.
     const lineItemId = body.line_item?.id != null ? String(body.line_item.id) : "";
     let tracked = false;
