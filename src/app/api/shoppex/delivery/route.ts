@@ -3,7 +3,7 @@ import { alert } from "@/lib/reseller/alerts";
 import { ResellerError, resellerFetch } from "@/lib/reseller/client";
 import { buildResellerFields } from "@/lib/reseller/fields";
 import { resellerTarget } from "@/lib/reseller/mapping";
-import { verifyDynamicSignature } from "@/lib/reseller/signature";
+import { diagnoseSignature, verifyDynamicSignature } from "@/lib/reseller/signature";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -38,7 +38,10 @@ export async function POST(req: Request) {
   const secrets = (process.env.DYNAMIC_WEBHOOK_SECRET ?? "").split(",").map(s => s.trim()).filter(Boolean);
   const ok = verifyDynamicSignature({ header: req.headers.get("x-shoppex-signature-v2"), timestamp: req.headers.get("x-shoppex-timestamp"), deliveryId, rawBody, secrets });
   if (!ok) {
-    await alert("⚠️ Rejected delivery call (bad signature)", { "Delivery ID": deliveryId ?? "missing", Hint: secrets.length ? "Signature didn't match DYNAMIC_WEBHOOK_SECRET" : "DYNAMIC_WEBHOOK_SECRET is not set" }, 0xf59e0b);
+    let bodyId: string | null = null;
+    try { bodyId = (JSON.parse(rawBody) as { deliveryId?: string }).deliveryId ?? null; } catch { /* ignore */ }
+    const diag = diagnoseSignature({ header: req.headers.get("x-shoppex-signature-v2"), legacy: req.headers.get("x-shoppex-signature"), timestamp: req.headers.get("x-shoppex-timestamp"), headerId: deliveryId, bodyId, rawBody, secrets });
+    await alert("⚠️ Rejected delivery call (bad signature)", { "Delivery ID": deliveryId ?? "missing", Hint: secrets.length ? "Signature didn't match DYNAMIC_WEBHOOK_SECRET" : "DYNAMIC_WEBHOOK_SECRET is not set", Diagnosis: diag }, 0xf59e0b);
     return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
