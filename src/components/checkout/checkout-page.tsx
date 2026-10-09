@@ -149,6 +149,8 @@ export function CheckoutPage() {
   const gateways = useMemo(() => (view ? usableGateways(view) : []), [view]);
   const selected = gateways.find(g => g.gateway === method) ?? null;
   const line = view?.line_items[0];
+  // A 100% coupon makes the order free: Shoppex then offers no payment methods, so we complete it directly.
+  const isFree = !!view && (view.payment_required === false || Number(view.breakdown.total) === 0);
   const needsTerms = !!view && (view.terms.required || !!selected?.requirements.terms_accepted) && !view.buyer.payment_method_terms_accepted;
   const termsCovered = fields.some(f => f.type === "checkbox" && /terms/i.test(f.name) && isStorefrontCheckboxCustomFieldValueChecked(values[f.name]));
   const showTermsBox = needsTerms && !termsCovered;
@@ -204,12 +206,12 @@ export function CheckoutPage() {
     if (showTermsBox && !terms) next.terms = "Please accept the terms to continue.";
     if (needsConsent && !consent) next.consent = "Please tick this box to continue.";
     if (needsBilling) (["name", "line1", "city", "country", "postal_code"] as const).forEach(k => { if (!billing[k].trim()) next[`b:${k}`] = "Required"; });
-    if (!method) next.method = cryptoOpen ? "Choose which coin you'll pay with." : "Choose how you'd like to pay.";
+    if (!method && !isFree) next.method = cryptoOpen ? "Choose which coin you'll pay with." : "Choose how you'd like to pay.";
     return showErrors(next);
   }
 
   async function startPayment() {
-    if (!view || busy || !validate() || !method) return;
+    if (!view || busy || !validate() || (!method && !isFree)) return;
     setBusy(true); setFormError(null);
     try {
       let v = view;
@@ -222,13 +224,14 @@ export function CheckoutPage() {
       }
       if (needsConsent) v = await client.recordWithdrawalConsent(v.id, v.withdrawal_consent.text_version);
       setView(v);
-      if (!v.payment_required) {
+      if (!v.payment_required || Number(v.breakdown.total) === 0) {
         await client.completeFreeCheckout(v.id);
         finish(await client.getSession(v.id));
         return;
       }
       await revealAttribution();
       assertAttribution(v.attribution.required);
+      if (!method) return;
       const result = await client.startPaymentSession(v.id, method);
       handleStart(v, result);
     } catch (e) {
@@ -396,7 +399,9 @@ export function CheckoutPage() {
   const cta = step === "details"
     ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Saving…</> : <>Continue to payment <ArrowRight size={17} /></>}</button>
     : step === "method"
-      ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy || gateways.length === 0}>{busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : selected ? <>Pay {money(total, currency)} <ArrowRight size={17} /></> : <>Choose a payment method</>}</button>
+      ? isFree
+        ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Completing order…</> : <>Complete free order <ArrowRight size={17} /></>}</button>
+        : <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy || gateways.length === 0}>{busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : selected ? <>Pay {money(total, currency)} <ArrowRight size={17} /></> : <>Choose a payment method</>}</button>
       : null;
 
   const summary = (
@@ -571,8 +576,9 @@ export function CheckoutPage() {
         </div>
         {plan && <button type="button" className="co-link" onClick={() => { setView(null); setMethod(null); setPhase({ name: "details" }); setFormError(null); }}>Edit details</button>}
       </div>
-      {gateways.length === 0 && <p className="co-alert">No payment methods are available right now. Please contact support.</p>}
-      <div className="co-methods" role="radiogroup" aria-label="Payment method" data-err="method">
+      {isFree && <p className="co-muted">Your discount covers the whole order — no payment needed. Click <b>Complete free order</b> to finish.</p>}
+      {!isFree && gateways.length === 0 && <p className="co-alert">No payment methods are available right now. Please contact support.</p>}
+      <div className="co-methods" role="radiogroup" aria-label="Payment method" data-err="method" hidden={isFree}>
         {gateways.filter((g, i) => !groupCrypto || gatewayGroup(g) !== "crypto" || gateways.findIndex(x => gatewayGroup(x) === "crypto") === i).map(g => {
           const isGroup = groupCrypto && gatewayGroup(g) === "crypto";
           const info = isGroup ? { title: "Cryptocurrency", sub: cryptoGateways.map(c => coinInfo(c).name.replace(/ \(.+\)$/, "")).filter((n, i, all) => all.indexOf(n) === i).join(", "), logos: <CoinStack /> } : methodInfo(g);
