@@ -19,6 +19,7 @@ type DeliveryBody = {
   productTitle?: string; variantTitle?: string | null; quantity?: number;
   customFields?: Record<string, unknown>;
 };
+type OrderLines = { data: { lines: { delivered: boolean; serials: string[] }[] } };
 type OrderResponse = { data: { order: { uniqid: string; status: string; total: string; reused?: boolean }; deliverables: { delivered: boolean; serials: string[]; product_title?: string }[] } };
 
 const pending = () => NextResponse.json({ status: "pending" });
@@ -32,7 +33,10 @@ function deliveredText(title: string, serials: string[]) {
   return `✅ Your ${title} order has been sent to your server!\n\nIt can take a few minutes for Discord to show the new boost count. Don't kick or ban the boosting accounts — removed boosts aren't covered by the warranty.\n\nQuestions? Open a ticket with your order ID: https://discord.gg/Bewfk2dHzj`;
 }
 
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 export async function POST(req: Request) {
+  const startedAt = Date.now();
   const rawBody = await req.text();
   const deliveryId = req.headers.get("x-shoppex-delivery-id");
   const secrets = (process.env.DYNAMIC_WEBHOOK_SECRET ?? "").split(",").map(s => s.trim()).filter(Boolean);
@@ -69,9 +73,16 @@ export async function POST(req: Request) {
       timeoutMs: 11_000,
       body: JSON.stringify({ items: [{ product_id: target.productId, variant_id: target.variantId, quantity: Math.max(1, Number(body.quantity) || 1), custom_fields: buildResellerFields(body.customFields ?? {}, contact) }] }),
     });
-    const { order, deliverables } = res.data;
-    const allDelivered = deliverables.length > 0 && deliverables.every(d => d.delivered);
-    const serials = deliverables.flatMap(d => d.serials ?? []);
+    const { order } = res.data;
+    let lines: { delivered: boolean; serials: string[] }[] = res.data.deliverables;
+    // Liteboosts often finishes a few seconds after accepting the order — re-check while we still have
+    // time inside Shoppex's 15-second window, so fast orders are marked delivered right away.
+    while (!(lines.length > 0 && lines.every(d => d.delivered)) && Date.now() - startedAt < 10_000) {
+      await sleep(1500);
+      try { lines = (await resellerFetch<OrderLines>(`/orders/${encodeURIComponent(order.uniqid)}`, { timeoutMs: 2000 })).data.lines; } catch { break; }
+    }
+    const allDelivered = lines.length > 0 && lines.every(d => d.delivered);
+    const serials = lines.flatMap(d => d.serials ?? []);
     const isBoost = /\bboosts?\b/i.test(title) && !/token/i.test(title);
     const lbInfo = { ...info, "Liteboosts order": order.uniqid, Cost: `$${order.total}` };
 
