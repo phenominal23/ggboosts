@@ -3,7 +3,9 @@ import { alert } from "@/lib/reseller/alerts";
 import { ResellerError, resellerFetch } from "@/lib/reseller/client";
 import { buildResellerFields } from "@/lib/reseller/fields";
 import { resellerTarget } from "@/lib/reseller/mapping";
+import { canAutoComplete, deliveredText } from "@/lib/reseller/messages";
 import { diagnoseSignature, verifyDynamicSignature } from "@/lib/reseller/signature";
+import { savePending, storeConfigured } from "@/lib/reseller/store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,20 +20,12 @@ type DeliveryBody = {
   invoiceId?: string; deliveryId?: string; idempotencyKey?: string; customerEmail?: string;
   productTitle?: string; variantTitle?: string | null; quantity?: number;
   customFields?: Record<string, unknown>;
+  line_item?: { id?: string | number };
 };
 type OrderLines = { data: { lines: { delivered: boolean; serials: string[] }[] } };
 type OrderResponse = { data: { order: { uniqid: string; status: string; total: string; reused?: boolean }; deliverables: { delivered: boolean; serials: string[]; product_title?: string }[] } };
 
 const pending = () => NextResponse.json({ status: "pending" });
-
-function deliveredText(title: string, serials: string[]) {
-  const t = title.toLowerCase();
-  if (serials.length) {
-    const intro = t.includes("nitro") && !t.includes("token") ? "✅ Your Discord Nitro is ready!\n\nRedeem it by opening the link below while logged in to the Discord account you want Nitro on:" : `✅ Your ${title} is ready!`;
-    return `${intro}\n\n${serials.join("\n")}\n\nQuestions? Open a ticket with your order ID: https://discord.gg/Bewfk2dHzj`;
-  }
-  return `✅ Your ${title} order has been sent to your server!\n\nIt can take a few minutes for Discord to show the new boost count. Don't kick or ban the boosting accounts — removed boosts aren't covered by the warranty.\n\nQuestions? Open a ticket with your order ID: https://discord.gg/Bewfk2dHzj`;
-}
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -87,14 +81,22 @@ export async function POST(req: Request) {
     }
     const allDelivered = lines.length > 0 && lines.every(d => d.delivered);
     const serials = lines.flatMap(d => d.serials ?? []);
-    const isBoost = /\bboosts?\b/i.test(title) && !/token/i.test(title);
     const lbInfo = { ...info, "Liteboosts order": order.uniqid, Cost: `$${order.total}` };
 
-    if (allDelivered && (serials.length > 0 || isBoost)) {
+    if (allDelivered && canAutoComplete(title, serials)) {
       await alert("✅ Auto-delivered", lbInfo);
       return NextResponse.json({ data: { service_text: deliveredText(title, serials), dynamic_response: serials.length ? { codes: serials } : { status: "sent" }, deliveryType: "DYNAMIC", count: Math.max(1, serials.length) } });
     }
-    await alert("⏳ Ordered on Liteboosts — waiting on their delivery", { ...lbInfo, Next: "When Liteboosts delivers, mark this order fulfilled in Shoppex" }, 0xfbbf24);
+    // Remember the order so the auto-complete check (/api/cron/complete) can finish it later.
+    const lineItemId = body.line_item?.id != null ? String(body.line_item.id) : "";
+    let tracked = false;
+    if (storeConfigured() && body.invoiceId && lineItemId && deliveryId) {
+      try {
+        await savePending({ lbOrderId: order.uniqid, invoiceId: body.invoiceId, lineItemId, deliveryId, title, createdAt: Date.now() });
+        tracked = true;
+      } catch (e) { console.error("savePending failed", e); }
+    }
+    await alert("⏳ Ordered on Liteboosts — waiting on their delivery", { ...lbInfo, Next: tracked ? "Will auto-complete when Liteboosts delivers" : "When Liteboosts delivers, mark this order fulfilled in Shoppex" }, 0xfbbf24);
     return pending();
   } catch (e) {
     const err = e instanceof ResellerError ? `${e.code}: ${e.message}` : e instanceof Error ? e.message : String(e);
