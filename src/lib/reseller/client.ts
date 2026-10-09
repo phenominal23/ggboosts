@@ -1,7 +1,7 @@
 
 // Minimal client for the Shoppex Reseller API (Liteboosts' wholesale program).
 // Docs: https://docs.shoppex.io/developers/reseller-api
-const BASE = "https://api.shoppex.io/reseller/v1";
+const BASE = process.env.RESELLER_API_BASE ?? "https://api.shoppex.io/reseller/v1"; // override only for local testing
 
 export class ResellerError extends Error {
   constructor(readonly status: number, readonly code: string, message: string, readonly body?: unknown) {
