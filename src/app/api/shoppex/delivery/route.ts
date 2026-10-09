@@ -39,7 +39,11 @@ export async function POST(req: Request) {
   const startedAt = Date.now();
   const rawBody = await req.text();
   const deliveryId = req.headers.get("x-shoppex-delivery-id");
-  const secrets = (process.env.DYNAMIC_WEBHOOK_SECRET ?? "").split(",").map(s => s.trim()).filter(Boolean);
+  // One Vercel variable per product: DYNAMIC_WEBHOOK_SECRET, DYNAMIC_WEBHOOK_SECRET_14, _20, … (commas also work).
+  const secrets = Object.entries(process.env)
+    .filter(([k]) => k.startsWith("DYNAMIC_WEBHOOK_SECRET"))
+    .flatMap(([, v]) => (v ?? "").split(","))
+    .map(s => s.trim()).filter(Boolean);
   const ok = verifyDynamicSignature({ header: req.headers.get("x-shoppex-signature-v2"), timestamp: req.headers.get("x-shoppex-timestamp"), deliveryId, rawBody, secrets });
   if (!ok) {
     let bodyId: string | null = null;
