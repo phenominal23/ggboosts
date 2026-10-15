@@ -26,6 +26,10 @@ export async function claimCooldown(userId: string, seconds: number) {
   return ok === "OK";
 }
 
+export async function releaseCooldown(userId: string) {
+  await redis("DEL", `ggb:vouch:cd:${userId}`);
+}
+
 export async function nextVouchNumber() {
   return redis<number>("INCR", COUNT);
 }

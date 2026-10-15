@@ -25,7 +25,8 @@ export const COMMANDS = [
     options: [
       {
         type: 4, name: "rating", description: "How many stars?", required: true,
-        choices: [5, 4, 3, 2, 1].map(n => ({ name: `${"⭐".repeat(n)} (${n}/5)`, value: n })),
+        // 5 is listed last so it sits right above the text box on phones (no scrolling needed).
+        choices: [1, 2, 3, 4, 5].map(n => ({ name: `${n} star${n === 1 ? "" : "s"} ${"⭐".repeat(n)}`, value: n })),
       },
       { type: 3, name: "product", description: "What did you buy?", required: true, choices: PRODUCTS.map(p => ({ name: p, value: p })) },
       { type: 3, name: "message", description: "How did it go?", required: true, min_length: 5, max_length: 400 },

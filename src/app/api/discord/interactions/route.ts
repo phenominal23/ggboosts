@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { avatarUrl, discordApi, PRODUCTS, verifyDiscordRequest } from "@/lib/vouches/discord";
-import { claimCooldown, nextVouchNumber, removeVouch, saveVouch, type Vouch, vouchStoreReady } from "@/lib/vouches/store";
+import { alert } from "@/lib/reseller/alerts";
+import { claimCooldown, nextVouchNumber, releaseCooldown, removeVouch, saveVouch, type Vouch, vouchStoreReady } from "@/lib/vouches/store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -77,16 +78,22 @@ async function handleVouch(i: Interaction) {
   const payload = { embeds: [vouchEmbed(v)], allowed_mentions: { parse: [] } };
   const vouchChannel = process.env.VOUCH_CHANNEL_ID;
 
-  // Used outside #vouches: post the card there and quietly thank the customer here.
-  if (vouchChannel && i.channel_id !== vouchChannel && process.env.DISCORD_BOT_TOKEN) {
-    try {
-      await discordApi(`/channels/${vouchChannel}/messages`, { method: "POST", body: payload });
-      return reply(`💚 Thanks for your vouch! It's posted in <#${vouchChannel}> as vouch #${v.n}.`);
-    } catch (e) {
-      console.error("vouch post failed", e);
-    }
+  // Typed in #vouches itself: answer with the card right there.
+  if (!vouchChannel || i.channel_id === vouchChannel) return NextResponse.json({ type: 4, data: payload });
+
+  // Typed anywhere else (e.g. a ticket): post the card in #vouches and quietly thank the customer.
+  // Never post the card in the ticket — if #vouches can't be reached, undo and tell staff.
+  try {
+    await discordApi(`/channels/${vouchChannel}/messages`, { method: "POST", body: payload });
+    return reply(`💚 Thanks for your vouch! It's posted in <#${vouchChannel}> as vouch #${v.n}.`);
+  } catch (e) {
+    const err = e instanceof Error ? e.message : String(e);
+    console.error("vouch post failed", err);
+    await removeVouch(v.n).catch(() => {});
+    await releaseCooldown(user.id).catch(() => {});
+    await alert("⚠️ /vouch couldn't post in #vouches", { Customer: `${v.name} (${user.id})`, Error: err, Fix: "Give the bot View Channel, Send Messages and Embed Links in #vouches, and check VOUCH_CHANNEL_ID" }, 0xf59e0b);
+    return reply(`Sorry — your vouch couldn't be posted in <#${vouchChannel}> right now. Staff have been notified; please try /vouch again shortly.`);
   }
-  return NextResponse.json({ type: 4, data: payload });
 }
 
 async function handleRemove(i: Interaction) {
