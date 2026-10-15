@@ -250,6 +250,7 @@ html:has(.lb) { scroll-padding-top: 0; }
 .rv-channel__list p { color: #d4d4d8; font-size: 15px; line-height: 1.55; }
 .rv-name { display: flex; align-items: center; gap: 10px; margin-bottom: 3px !important; }
 .rv-name b { font-weight: 700; }
+.rv-product { font-size: 11px; font-weight: 600; color: var(--muted, #9aa38f); background: rgba(184,255,60,.08); border: 1px solid rgba(184,255,60,.18); padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
 @keyframes rv-scroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
 .rv-channel__input { display: flex; align-items: center; gap: 10px; margin: 0 14px 14px; padding: 13px 16px; border-radius: 12px; background: #1b1b20; color: var(--faint); font-size: 14px; }
 .rv-avatar { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; color: #0b0b0c; font-weight: 800; font-size: 16px; }

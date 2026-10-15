@@ -1,4 +1,5 @@
-// Real customer reviews only. Paste vouches from your Discord here.
+// Real customer reviews only. /vouch reviews from Discord appear automatically;
+// add any extra ones (e.g. older vouches) here by hand.
 // While this list is empty, the reviews section is hidden on the live site
 // and shows clearly-labeled example data only when running locally (npm run dev).
 
@@ -7,6 +8,7 @@ export type Review = {
   rating: 1 | 2 | 3 | 4 | 5;
   quote: string;
   sourceUrl?: string; // optional link to the original Discord message or Trustpilot review
+  product?: string;
 };
 
 export const reviews: Review[] = [

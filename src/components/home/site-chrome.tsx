@@ -9,7 +9,7 @@ import { ArrowRight, BookOpen, ChevronDown, Gem as GemIcon, Layers, Link2, Menu,
 import { GGMark } from "@/components/gg-navigation";
 import { Gem } from "@/components/home/gem";
 import { PaymentLogo } from "@/components/home/payment-logos";
-import { getVisibleReviews } from "@/components/home/reviews-section";
+import { useReviews } from "@/lib/use-reviews";
 import { getBoostOffers } from "@/lib/boost-offers";
 import { getCustomerPortalHref } from "@/lib/shoppex-config";
 import { loadStorefrontData } from "@/lib/storefront-data";
@@ -78,7 +78,7 @@ export function Nav({ active }: { active?: "products" | "guides" }) {
     on(); window.addEventListener("scroll", on, { passive: true });
     return () => window.removeEventListener("scroll", on);
   }, []);
-  const showReviews = getVisibleReviews().list.length > 0;
+  const showReviews = useReviews().list.length > 0;
   const links: { href: string; label: string; key?: string }[] = [
     { href: "/#features", label: "Features" },
     { href: "/products", label: "Products", key: "products" },

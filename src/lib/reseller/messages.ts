@@ -1,5 +1,5 @@
 // Customer-facing delivery text used when an order completes automatically.
-const HELP = "Questions? Open a ticket with your order ID: https://discord.gg/Bewfk2dHzj";
+const HELP = "Happy with your order? Leave a vouch in our Discord with /vouch 💚\nQuestions? Open a ticket with your order ID: https://discord.gg/Bewfk2dHzj";
 
 export type Kind = "boosts" | "members" | "nitro" | "content";
 

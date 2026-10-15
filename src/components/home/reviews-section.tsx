@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowRight, ExternalLink, Hash, Plus, Star } from "lucide-react";
-import { exampleReviews, reviews as realReviews, trustpilotUrl, type Review } from "@/lib/reviews";
+import { trustpilotUrl } from "@/lib/reviews";
+import { useReviews } from "@/lib/use-reviews";
 import { reviewsCopy, site } from "@/lib/site-content";
 
 const avatarColors = ["#b8ff3c", "#5865f2", "#ff7ab6", "#ffb547", "#4fd1c5", "#a78bfa", "#f87171"];
@@ -20,15 +21,9 @@ function Stars({ rating, size = 12 }: { rating: number; size?: number }) {
   return <span className="rv-stars" aria-label={`${rating} out of 5 stars`}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={size} fill={i < rating ? "currentColor" : "none"} />)}</span>;
 }
 
-// Real reviews only. Example data appears only in local development, clearly labeled.
-export function getVisibleReviews(): { list: Review[]; examples: boolean } {
-  if (realReviews.length) return { list: realReviews, examples: false };
-  if (process.env.NODE_ENV !== "production") return { list: exampleReviews, examples: true };
-  return { list: [], examples: false };
-}
 
 export function ReviewsSection() {
-  const { list, examples } = getVisibleReviews();
+  const { list, examples } = useReviews();
   if (!list.length) return null;
   const avg = list.reduce((sum, r) => sum + r.rating, 0) / list.length;
   const feed = [...list, ...list];
@@ -56,7 +51,7 @@ export function ReviewsSection() {
               {feed.map((r, i) => (
                 <li key={i} aria-hidden={i >= list.length}>
                   <Avatar name={r.name} />
-                  <div><p className="rv-name"><b style={{ color: colorFor(r.name) }}>{r.name}</b><Stars rating={r.rating} /></p><p>{r.quote}</p></div>
+                  <div><p className="rv-name"><b style={{ color: colorFor(r.name) }}>{r.name}</b><Stars rating={r.rating} />{r.product && <span className="rv-product">{r.product}</span>}</p><p>{r.quote}</p></div>
                 </li>
               ))}
             </ul>

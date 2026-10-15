@@ -24,7 +24,7 @@ function creds() {
 
 export const storeConfigured = () => creds() !== null;
 
-async function redis<T = unknown>(...command: (string | number)[]): Promise<T> {
+export async function redis<T = unknown>(...command: (string | number)[]): Promise<T> {
   const c = creds();
   if (!c) throw new Error("Redis is not configured (KV_REST_API_URL / KV_REST_API_TOKEN).");
   const res = await fetch(c.url, {
