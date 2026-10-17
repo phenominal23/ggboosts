@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { CSSProperties, ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { themeConfig } from "@/lib/theme-config";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <JsonLd data={[organizationJsonLd, websiteJsonLd]} />
         {children}
         <Toaster position="bottom-left" />
+        <Analytics />
       </body>
     </html>
   );
