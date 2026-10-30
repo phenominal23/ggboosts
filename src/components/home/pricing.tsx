@@ -96,8 +96,8 @@ export function Pricing({ products = [], offers, status, demo, onRetry, showHead
           {status === "error" ? (
             <div className="gs-error"><p>We couldn't load pricing right now.</p><button type="button" className="gs-btn gs-btn--ghost" onClick={onRetry}><RotateCw size={15} /> Try again</button></div>
           ) : current !== "boosts" ? (
-            <div className="gs-items" key={current} aria-busy={status === "loading"}>
-              {status === "loading" ? [0, 1, 2].map(i => <div key={i} className="gs-card gs-item"><span className="gs-skeleton" /></div>)
+            <div className="br-list" key={current} aria-busy={status === "loading"}>
+              {status === "loading" ? [0, 1, 2].map(i => <div key={i} className="br"><span className="gs-skeleton" /></div>)
                 : (grouped.get(current) ?? []).map(p => <ItemCard key={p.uniqid} product={p} category={current} demo={demo} />)}
               {status === "ready" && !grouped.get(current)?.length && <p className="gs-error">Nothing here right now — check back soon or ask in our Discord.</p>}
             </div>

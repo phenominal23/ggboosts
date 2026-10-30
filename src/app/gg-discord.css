@@ -371,3 +371,13 @@
   .vw-score__num strong { font-size: 46px; }
   .vw-wall { grid-template-columns: 1fr; }
 }
+
+/* Members / Nitro / Accounts use the same rows as boosts */
+.br__sub { color: var(--faint); font-size: 12.5px; font-weight: 600; }
+.br.is-soldout { opacity: .55; }
+.br.is-soldout:hover { transform: none; }
+.br-list > .gs-error { padding: 18px 4px; }
+.br-list:last-child, .shop__main > .br-list { padding-bottom: 18px; }
+@media (max-width: 680px) {
+  .br--item .br__info p span:nth-child(n + 2) { display: none; }
+}

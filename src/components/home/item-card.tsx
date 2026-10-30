@@ -16,7 +16,7 @@ const fallbackPerks: Record<CategoryId, string[]> = {
   members: ["Pick any amount at checkout", "No Discord login needed", "Discord support"],
 };
 
-/** Nitro, accounts, members, reactions. Shows the unit price — the amount is picked at checkout. */
+/** Nitro, accounts, members, reactions as a row, same layout as the boost packages. Amount is picked at checkout. */
 export function ItemCard({ product, category, demo }: { product: Product; category: CategoryId; demo: boolean }) {
   const currency = getCurrency(product);
   const price = getUnitPrice(product);
@@ -30,26 +30,21 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
   const title = product.title.replace(/\s+-\s+Full Access$/i, "");
   const sub = /full access/i.test(product.title) ? "Full Access" : product.short_description?.trim() || null;
   const formatted = unitPrice(price, currency);
-  const symbol = formatted.replace(/[\d.,\s]/g, "");
 
   return (
-    <article className={`gs-card gs-item ${soldOut ? "is-soldout" : ""} ${featured ? "is-popular" : ""}`}>
-      {featured && <span className="gs-item__badge">Most popular</span>}
-      <header>
-        <span className="gs-card__icon"><Icon size={20} /></span>
-        <div><h3>{title}</h3>{sub && <span>{sub}</span>}</div>
-      </header>
-
-      <div className="gs-card__price">
-        <strong><sup>{symbol}</sup>{formatted.replace(symbol, "")}</strong>
-        <span>{unit.one === "plan" ? "one-time payment" : `per ${unit.one}`}</span>
+    <article className={`br br--item ${soldOut ? "is-soldout" : ""} ${featured ? "is-popular" : ""}`}>
+      <span className="br__icon"><Icon size={20} /></span>
+      <div className="br__info">
+        <h3>{title} {featured && <span className="br__tag">Most popular</span>}{sub && <span className="br__sub">{sub}</span>}</h3>
+        <p>{perks.slice(0, 3).map(p => <span key={p}><Check size={13} /> {p}</span>)}</p>
       </div>
-
-      <ul>{perks.map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
-
+      <div className="br__price">
+        <strong>{formatted}</strong>
+        <small>{unit.one === "plan" ? "one-time" : `per ${unit.one}`}</small>
+      </div>
       {soldOut
-        ? <button className="gs-btn gs-btn--primary" type="button" disabled>Sold out</button>
-        : <Link className="gs-btn gs-btn--primary" href={href}>Buy now<ArrowRight size={16} /></Link>}
+        ? <button className="gs-btn gs-btn--primary br__buy" type="button" disabled>Sold out</button>
+        : <Link className="gs-btn gs-btn--primary br__buy" href={href}>Buy <ArrowRight size={15} /></Link>}
     </article>
   );
 }
