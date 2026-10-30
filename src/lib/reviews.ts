@@ -9,6 +9,7 @@ export type Review = {
   quote: string;
   sourceUrl?: string; // optional link to the original Discord message or Trustpilot review
   product?: string;
+  avatar?: string;
 };
 
 export const reviews: Review[] = [
