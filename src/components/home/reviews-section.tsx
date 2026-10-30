@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, ExternalLink, Hash, Plus, Star } from "lucide-react";
+import { ArrowRight, ChevronDown, ExternalLink, Star } from "lucide-react";
 import { trustpilotUrl } from "@/lib/reviews";
-import { useReviews } from "@/lib/use-reviews";
+import { type ShownReview, useReviews } from "@/lib/use-reviews";
 import { reviewsCopy, site } from "@/lib/site-content";
+import { DiscordIcon } from "@/components/home/site-chrome";
 
+// Reviews shown as a wall of the same embeds our /vouch bot posts in Discord.
 const avatarColors = ["#b8ff3c", "#5865f2", "#ff7ab6", "#ffb547", "#4fd1c5", "#a78bfa", "#f87171"];
 
 function colorFor(name: string) {
@@ -14,65 +16,101 @@ function colorFor(name: string) {
   return avatarColors[h % avatarColors.length];
 }
 
+// Discord names like ";" or "." read as broken on the site.
+function displayName(name: string) {
+  return /[\p{L}\p{N}]/u.test(name) ? name.trim() : "Verified buyer";
+}
+
+// Drop "vouch —" prefixes and typed-in star emoji (we already show real stars).
+function cleanQuote(q: string) {
+  return q.replace(/^\s*\+?vouch\s*[-—–:|]*\s*/i, "").replace(/[⭐🌟]+/gu, "").replace(/\s{2,}/g, " ").trim();
+}
+
+function shortDate(iso?: string) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 function Avatar({ name, src }: { name: string; src?: string }) {
   const [failed, setFailed] = useState(false);
-  if (src && !failed) return <img className="rv-avatar rv-avatar--img" src={src} alt="" aria-hidden="true" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
-  return <span className="rv-avatar" style={{ background: colorFor(name) }} aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>;
+  if (src && !failed) return <img className="vw-ava" src={src} alt="" aria-hidden="true" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+  return <span className="vw-ava" style={{ background: colorFor(name) }} aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>;
 }
 
-function Stars({ rating, size = 12 }: { rating: number; size?: number }) {
-  return <span className="rv-stars" aria-label={`${rating} out of 5 stars`}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={size} fill={i < rating ? "currentColor" : "none"} />)}</span>;
+function Stars({ rating, size = 14 }: { rating: number; size?: number }) {
+  return <span className="vw-stars" role="img" aria-label={`${rating} out of 5 stars`}>{Array.from({ length: 5 }, (_, i) => <Star key={i} size={size} fill={i < rating ? "currentColor" : "none"} />)}</span>;
 }
 
+function VouchCard({ r }: { r: ShownReview }) {
+  const name = displayName(r.name);
+  const date = shortDate(r.createdAt);
+  return (
+    <figure className="vw-card">
+      <div className="vw-card__head">
+        <Avatar name={name} src={r.avatar} />
+        <div>
+          <b style={{ color: colorFor(name) }}>{name}</b>
+          <span className="vw-verified">Verified purchase</span>
+        </div>
+        {r.n ? <span className="vw-num">#{r.n}</span> : null}
+      </div>
+      <div className="vw-embed">
+        <Stars rating={r.rating} />
+        <blockquote>{cleanQuote(r.quote) || "Great service."}</blockquote>
+        {(r.product || date) && (
+          <figcaption>
+            {r.product && <span className="vw-chip">{r.product}</span>}
+            {date && <span className="vw-date">{date}</span>}
+          </figcaption>
+        )}
+      </div>
+    </figure>
+  );
+}
 
 export function ReviewsSection() {
   const { list, examples } = useReviews();
+  const [open, setOpen] = useState(false);
   if (!list.length) return null;
   const avg = list.reduce((sum, r) => sum + r.rating, 0) / list.length;
-  const feed = [...list, ...list];
-  const marquee = [...list, ...list, ...list];
+  const fives = list.filter(r => r.rating === 5).length;
+  const shown = open ? list : list.slice(0, 6);
 
   return (
-    <section className="gs-section gs-reviews" id="reviews" data-nav-section>
-      {examples && <p className="gs-demo-flag gs-demo-flag--block">Example reviews — visible only in local development. Add real reviews in src/lib/reviews.ts; this section is hidden on the live site until you do.</p>}
-      <div className="rv-split">
-        <div className="rv-intro" data-reveal>
+    <section className="gs-section vw" id="reviews" data-nav-section>
+      {examples && <p className="gs-demo-flag gs-demo-flag--block">Example reviews — visible only in local development.</p>}
+
+      <div className="vw-top" data-reveal>
+        <header className="gs-head gs-head--left">
           <span className="gs-eyebrow">{reviewsCopy.eyebrow}</span>
           <h2>{reviewsCopy.titleBefore} <em>{reviewsCopy.titleAccent}</em></h2>
           <p>{reviewsCopy.body}</p>
-          <div className="rv-score">
-            <strong>{avg.toFixed(1)}</strong>
-            <div><Stars rating={Math.round(avg)} size={22} /><span>out of 5 · {list.length} review{list.length === 1 ? "" : "s"}</span></div>
-          </div>
-          <a className="gs-btn gs-btn--primary" href={site.supportUrl} target="_blank" rel="noreferrer">See all reviews <ArrowRight size={16} /></a>
-          {trustpilotUrl && <a className="rv-tp" href={trustpilotUrl} target="_blank" rel="noreferrer">View reviews on Trustpilot <ExternalLink size={12} /></a>}
-        </div>
-        <div className="rv-channel" data-reveal>
-          <div className="rv-channel__top"><span><Hash size={16} /> reviews</span><span className="rv-live">Live feed <i /></span></div>
-          <div className="rv-channel__viewport">
-            <ul className="rv-channel__list" style={{ animationDuration: `${list.length * 4}s` }}>
-              {feed.map((r, i) => (
-                <li key={i} aria-hidden={i >= list.length}>
-                  <Avatar name={r.name} src={r.avatar} />
-                  <div><p className="rv-name"><b style={{ color: colorFor(r.name) }}>{r.name}</b><Stars rating={r.rating} />{r.product && <span className="rv-product">{r.product}</span>}</p><p>{r.quote}</p></div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="rv-channel__input"><Plus size={15} /> Message #reviews</div>
+        </header>
+
+        <div className="vw-score">
+          <div className="vw-score__num"><strong>{avg.toFixed(1)}</strong><Stars rating={Math.round(avg)} size={18} /></div>
+          <ul>
+            <li><b>{list.length}</b> vouch{list.length === 1 ? "" : "es"}</li>
+            <li><b>{Math.round((fives / list.length) * 100)}%</b> five stars</li>
+          </ul>
+          <a className="gs-btn gs-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Read them in Discord</a>
+          {trustpilotUrl && <a className="vw-tp" href={trustpilotUrl} target="_blank" rel="noreferrer">Trustpilot <ExternalLink size={12} /></a>}
         </div>
       </div>
-      <div className="rv-marquee-label"><i /> Reviews from our Discord</div>
-      <div className="rv-marquee" aria-hidden="true">
-        <div className="rv-marquee__track" style={{ animationDuration: `${list.length * 6}s` }}>
-          {marquee.map((r, i) => (
-            <figure key={i} className="rv-mini">
-              <div className="rv-mini__head"><Avatar name={r.name} src={r.avatar} /><div><b>{r.name}</b><Stars rating={r.rating} size={10} /></div></div>
-              <blockquote>“{r.quote}”</blockquote>
-            </figure>
-          ))}
-        </div>
+
+      <div className="vw-wall" data-reveal>
+        {shown.map((r, i) => <VouchCard key={`${r.n ?? "m"}-${i}`} r={r} />)}
       </div>
+
+      {list.length > 6 && (
+        <div className="vw-more">
+          <button type="button" className="gs-btn gs-btn--ghost" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+            {open ? "Show less" : `Show all ${list.length} vouches`} <ChevronDown size={16} style={{ transform: open ? "rotate(180deg)" : undefined }} />
+          </button>
+          <a className="vw-cta" href="#pricing">Ready to join them? <ArrowRight size={15} /></a>
+        </div>
+      )}
     </section>
   );
 }

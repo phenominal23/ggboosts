@@ -306,3 +306,68 @@
 .shop .gs-items > .gs-error { grid-column: 1 / -1; margin: 0; }
 .invite--page { margin-top: 120px; }
 .invite__legal { display: block; margin-top: 22px; color: var(--faint); font-size: 12px; }
+
+/* ---------- Fixes Oct 30 ---------- */
+/* Hero: no forced full-screen height (left a huge empty gap on tall screens) */
+.hero { min-height: 0; padding: 72px 0 24px; }
+.lv.gs-section { padding-top: 96px; }
+
+/* "Why GGBoosts": one lime-accented strip instead of four loose grey tiles */
+.why { margin-top: 56px; }
+.why ul { position: relative; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line-2); border-radius: 16px; background: linear-gradient(180deg, #b8ff3c0a, transparent 60%), var(--panel); overflow: hidden; }
+.why ul::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--lime), transparent); opacity: .7; }
+.why li { flex-direction: column; gap: 14px; padding: 26px 24px; border: 0; border-radius: 0; background: none; }
+.why li + li { border-left: 1px solid var(--line); }
+.why__icon { width: 42px; height: 42px; border-radius: 12px; background: #b8ff3c14; border: 1px solid #b8ff3c33; color: var(--lime); }
+.why h3 { font-size: 16.5px; }
+.why p { margin-top: 6px; font-size: 14px; }
+
+/* ---------- Reviews: a wall of /vouch embeds ---------- */
+.vw-top { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: center; gap: 40px; margin-bottom: 36px; }
+.vw-top .gs-head--left { margin-bottom: 0; }
+.vw-score { padding: 22px; border: 1px solid var(--line-2); border-radius: 16px; background: var(--panel); }
+.vw-score__num { display: flex; align-items: center; gap: 14px; }
+.vw-score__num strong { font-family: var(--display); font-size: 56px; font-weight: 800; line-height: 1; letter-spacing: -.04em; }
+.vw-score ul { display: flex; gap: 18px; margin: 14px 0 18px; padding: 0; list-style: none; color: var(--dim); font-size: 14px; }
+.vw-score ul b { color: var(--text); }
+.vw-score .gs-btn { width: 100%; justify-content: center; }
+.vw-tp { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; color: var(--faint); font-size: 13px; }
+.vw-stars { display: inline-flex; gap: 2px; color: var(--lime); }
+
+.vw-wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; align-items: start; margin-bottom: 16px; }
+.vw-card { margin: 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-3); transition: transform .2s, border-color .2s; }
+.vw-card:hover { transform: translateY(-2px); border-color: #b8ff3c40; }
+.vw-card__head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+.vw-card__head > div { min-width: 0; flex: 1; }
+.vw-card__head b { display: block; overflow: hidden; font-size: 15px; white-space: nowrap; text-overflow: ellipsis; }
+.vw-verified { color: var(--faint); font-size: 12px; }
+.vw-num { padding: 3px 8px; border-radius: 6px; background: var(--panel-2); color: var(--faint); font-size: 12px; font-weight: 700; }
+.vw-ava { display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; object-fit: cover; color: #0b0b0c; font-weight: 800; }
+.vw-embed { padding: 12px 14px; border-left: 4px solid var(--lime); border-radius: 4px 8px 8px 4px; background: var(--panel-2); }
+.vw-embed blockquote { margin: 8px 0 0; color: var(--text); font-size: 15px; line-height: 1.55; overflow-wrap: anywhere; }
+.vw-embed figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.vw-chip { padding: 3px 9px; border: 1px solid #b8ff3c33; border-radius: 999px; background: #b8ff3c12; color: var(--lime); font-size: 11.5px; font-weight: 700; }
+.vw-date { color: var(--faint); font-size: 12px; }
+.vw-more { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 22px; margin-top: 10px; }
+.vw-more svg { transition: transform .2s; }
+.vw-cta { display: inline-flex; align-items: center; gap: 6px; color: var(--lime); font-weight: 700; }
+
+@media (max-width: 1100px) {
+  .why ul { grid-template-columns: 1fr 1fr; }
+  .why li + li { border-left: 0; }
+  .why li:nth-child(even) { border-left: 1px solid var(--line); }
+  .why li:nth-child(n + 3) { border-top: 1px solid var(--line); }
+}
+@media (max-width: 900px) {
+  .vw-top { grid-template-columns: 1fr; align-items: start; gap: 24px; }
+}
+@media (max-width: 680px) {
+  .hero { padding-top: 36px; }
+  .lv.gs-section { padding-top: 80px; }
+  .why ul { grid-template-columns: 1fr; }
+  .why li { flex-direction: row; padding: 18px; }
+  .why li:nth-child(even) { border-left: 0; }
+  .why li + li { border-top: 1px solid var(--line); }
+  .vw-score__num strong { font-size: 46px; }
+  .vw-wall { grid-template-columns: 1fr; }
+}

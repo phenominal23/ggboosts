@@ -5,7 +5,6 @@ import { HowChat } from "@/components/home/how-chat";
 import { LevelsSection } from "@/components/home/levels";
 import { Pricing } from "@/components/home/pricing";
 import { ReviewsSection } from "@/components/home/reviews-section";
-import { Comparison } from "@/components/home/comparison";
 import { ServerWindow } from "@/components/home/server-window";
 import { DiscordIcon, FaqSection, Footer, Nav, SiteBackground, useScrollReveal, useStorefront } from "@/components/home/site-chrome";
 import { faqs, finalCta, hero, site } from "@/lib/site-content";
@@ -44,8 +43,6 @@ export function StorefrontHome() {
       <Pricing products={products} offers={offers} status={status} demo={demo} onRetry={retry} />
 
       <ReviewsSection />
-
-      {status === "ready" && <Comparison offers={offers} />}
 
       <FaqSection items={faqs} title={<>Questions, <em>answered</em></>} sub="Everything you need to know about delivery, safety, and support." />
 
