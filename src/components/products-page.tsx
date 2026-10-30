@@ -10,16 +10,16 @@ export function ProductsPage() {
   useScrollReveal(status);
 
   return (
-    <main className="lb">
+    <main className="gs">
       <a className="skip-link" href="#pricing">Skip to products</a>
       <SiteBackground />
       <Nav active="products" />
 
-      <header className="lb-page-head">
-        <nav className="lb-crumbs lb-anim" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><span aria-current="page">Products</span></nav>
-        <span className="lb-eyebrow lb-anim" style={{ animationDelay: ".05s" }}>{productsPage.eyebrow}</span>
-        <h1 className="lb-anim" style={{ animationDelay: ".12s" }}>{productsPage.titleBefore} <em>{productsPage.titleAccent}</em></h1>
-        <p className="lb-anim" style={{ animationDelay: ".2s" }}>{productsPage.body}</p>
+      <header className="gs-page-head">
+        <nav className="gs-crumbs gs-anim" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><span aria-current="page">Products</span></nav>
+        <span className="gs-eyebrow gs-anim" style={{ animationDelay: ".05s" }}>{productsPage.eyebrow}</span>
+        <h1 className="gs-anim" style={{ animationDelay: ".12s" }}>{productsPage.titleBefore} <em>{productsPage.titleAccent}</em></h1>
+        <p className="gs-anim" style={{ animationDelay: ".2s" }}>{productsPage.body}</p>
       </header>
 
       <Pricing products={products} offers={offers} status={status} demo={demo} onRetry={retry} showHead={false} />

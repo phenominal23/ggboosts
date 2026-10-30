@@ -32,14 +32,14 @@ export function Comparison({ offers }: { offers: BoostOffer[] }) {
   const [picked, setPicked] = useState<number | null>(null);
   if (!table.length) {
     if (process.env.NODE_ENV === "production") return null;
-    return <section className="lb-section"><p className="lb-demo-flag lb-demo-flag--block">Price comparison hidden: you need Shoppex prices that beat at least one verified competitor price in src/lib/competitors.ts. (Only visible in local development.)</p></section>;
+    return <section className="gs-section"><p className="gs-demo-flag gs-demo-flag--block">Price comparison hidden: you need Shoppex prices that beat at least one verified competitor price in src/lib/competitors.ts. (Only visible in local development.)</p></section>;
   }
   const active = table.find(t => t.count === picked) ?? table.find(t => t.count === 14) ?? table[0];
 
   return (
-    <section className="lb-section lb-compare" id="compare">
-      <header className="lb-head" data-reveal>
-        <span className="lb-eyebrow">{comparisonCopy.eyebrow}</span>
+    <section className="gs-section gs-compare" id="compare">
+      <header className="gs-head gs-head--left" data-reveal>
+        <span className="gs-eyebrow">{comparisonCopy.eyebrow}</span>
         <h2>{comparisonCopy.titleBefore} <em>{comparisonCopy.titleAccent}</em></h2>
         <p>{comparisonCopy.body}</p>
       </header>
@@ -69,7 +69,7 @@ export function Comparison({ offers }: { offers: BoostOffer[] }) {
         </div>
         <p className="cmp__foot">Competitor prices checked {checkedOn} · Subject to change</p>
       </div>
-      <div className="lb-center" data-reveal><a className="lb-btn lb-btn--primary" href="#pricing">See Packages <ArrowRight size={16} /></a></div>
+      <div className="gs-center" data-reveal><a className="gs-btn gs-btn--primary" href="#pricing">See Packages <ArrowRight size={16} /></a></div>
     </section>
   );
 }

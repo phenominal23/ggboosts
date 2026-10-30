@@ -46,7 +46,7 @@ function Block({ block }: { block: GuideBlock }) {
   return (
     <aside className="gd-cta">
       <div><strong>{block.cta.title}</strong><p>{block.cta.text}</p></div>
-      <Link className="lb-btn lb-btn--primary" href={block.cta.href}>{block.cta.label} <ArrowRight size={16} /></Link>
+      <Link className="gs-btn gs-btn--primary" href={block.cta.href}>{block.cta.label} <ArrowRight size={16} /></Link>
     </aside>
   );
 }
@@ -59,7 +59,7 @@ export default async function GuidePage({ params }: Props) {
   const bodyText = guide.blocks.filter(b => "p" in b).map(b => plainText((b as { p: string }).p));
 
   return (
-    <main className="lb">
+    <main className="gs">
       <JsonLd data={[
         {
           "@context": "https://schema.org",
@@ -79,20 +79,20 @@ export default async function GuidePage({ params }: Props) {
       <SiteBackground />
       <Nav active="guides" />
       <article className="gd-article">
-        <nav className="lb-crumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><Link href="/guides">Guides</Link><span>/</span><span aria-current="page">{guide.short}</span></nav>
+        <nav className="gs-crumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><Link href="/guides">Guides</Link><span>/</span><span aria-current="page">{guide.short}</span></nav>
         <header>
-          <span className="lb-eyebrow">{guide.topic}</span>
+          <span className="gs-eyebrow">{guide.topic}</span>
           <h1>{guide.title}</h1>
           <p className="gd-meta">Updated {updated} · {guide.minutes} min read</p>
         </header>
         <div className="gd-body">{guide.blocks.map((b, i) => <Block key={`${guide.slug}-${i}`} block={b} />)}</div>
         <footer className="gd-help">
           <p>Still stuck? Ask us in Discord — a real person answers.</p>
-          <a className="lb-btn lb-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord Support</a>
+          <a className="gs-btn gs-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord Support</a>
         </footer>
       </article>
-      <section className="lb-section lb-section--tight">
-        <header className="lb-head"><span className="lb-eyebrow">Keep reading</span><h2>More <em>guides</em></h2></header>
+      <section className="gs-section gs-section--tight">
+        <header className="gs-head"><span className="gs-eyebrow">Keep reading</span><h2>More <em>guides</em></h2></header>
         <div className="gd-grid">{relatedGuides(guide.slug).map(g => <GuideCard key={g.slug} guide={g} />)}</div>
       </section>
       <Footer />

@@ -269,14 +269,14 @@ export function CheckoutPage() {
   // ---------- Render ----------
   const header = (
     <header className="co-top">
-      <Link className="lb-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
+      <Link className="gs-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
       <span className="co-top__secure"><Lock size={14} /> Secure checkout</span>
       <Link className="co-top__back" href="/products"><ArrowLeft size={15} /> Back to plans</Link>
     </header>
   );
 
   const shell = (body: React.ReactNode) => (
-    <main className="lb co">
+    <main className="gs co">
       <SiteBackground />
       {header}
       <div className="co-body">{body}</div>
@@ -290,7 +290,7 @@ export function CheckoutPage() {
       <Zap size={28} />
       <h1>Pick a plan first</h1>
       <p>Choose how many boosts you need and for how long, then hit Buy.</p>
-      <Link className="lb-btn lb-btn--primary" href="/products">See plans <ArrowRight size={16} /></Link>
+      <Link className="gs-btn gs-btn--primary" href="/products">See plans <ArrowRight size={16} /></Link>
     </div>,
   );
 
@@ -302,7 +302,7 @@ export function CheckoutPage() {
         <Lock size={28} />
         <h1>Continue to secure payment</h1>
         <p>Your payment opens in a secure Shoppex window.</p>
-        <button type="button" className="lb-btn lb-btn--primary lb-btn--lg" data-shoppex-shop-id={shoppexConfig.shopSlug} data-shoppex-product-id={phase.product} data-shoppex-theme="dark" data-shoppex-return-url={`${SITE_URL}/dashboard`} {...variantAttr}>
+        <button type="button" className="gs-btn gs-btn--primary gs-btn--lg" data-shoppex-shop-id={shoppexConfig.shopSlug} data-shoppex-product-id={phase.product} data-shoppex-theme="dark" data-shoppex-return-url={`${SITE_URL}/dashboard`} {...variantAttr}>
           Continue to payment <ArrowRight size={16} />
         </button>
       </div>,
@@ -314,9 +314,9 @@ export function CheckoutPage() {
       <XCircle size={28} />
       <h1>Checkout couldn't load</h1>
       <p>{phase.name === "error" ? phase.message : "Please try again."}</p>
-      <div className="lb-row co-state__actions">
-        <button type="button" className="lb-btn lb-btn--primary" onClick={() => window.location.reload()}>Try again</button>
-        <a className="lb-btn lb-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Get help</a>
+      <div className="gs-row co-state__actions">
+        <button type="button" className="gs-btn gs-btn--primary" onClick={() => window.location.reload()}>Try again</button>
+        <a className="gs-btn gs-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Get help</a>
       </div>
     </div>,
   );
@@ -328,9 +328,9 @@ export function CheckoutPage() {
       <p>We emailed your receipt. Here&apos;s what happens next:</p>
       <NextSteps productTitle={view.line_items[0]?.title ?? ""} orderId={view.invoice_uniqid} />
       <div className="co-done__id">Order ID <code>{view.invoice_uniqid}</code></div>
-      <div className="lb-row co-state__actions">
-        <Link className="lb-btn lb-btn--primary" href={`/dashboard?order=${encodeURIComponent(view.invoice_uniqid)}`}>Track my order <ArrowRight size={16} /></Link>
-        <Link className="lb-btn lb-btn--ghost" href="/">Back to home</Link>
+      <div className="gs-row co-state__actions">
+        <Link className="gs-btn gs-btn--primary" href={`/dashboard?order=${encodeURIComponent(view.invoice_uniqid)}`}>Track my order <ArrowRight size={16} /></Link>
+        <Link className="gs-btn gs-btn--ghost" href="/">Back to home</Link>
       </div>
     </div>,
   );
@@ -397,11 +397,11 @@ export function CheckoutPage() {
   );
 
   const cta = step === "details"
-    ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Saving…</> : <>Continue to payment <ArrowRight size={17} /></>}</button>
+    ? <button form="co-form" type="submit" className="gs-btn gs-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Saving…</> : <>Continue to payment <ArrowRight size={17} /></>}</button>
     : step === "method"
       ? isFree
-        ? <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Completing order…</> : <>Complete free order <ArrowRight size={17} /></>}</button>
-        : <button form="co-form" type="submit" className="lb-btn lb-btn--primary co-cta" disabled={busy || gateways.length === 0}>{busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : selected ? <>Pay {money(total, currency)} <ArrowRight size={17} /></> : <>Choose a payment method</>}</button>
+        ? <button form="co-form" type="submit" className="gs-btn gs-btn--primary co-cta" disabled={busy}>{busy ? <><Loader2 size={17} className="co-spin" /> Completing order…</> : <>Complete free order <ArrowRight size={17} /></>}</button>
+        : <button form="co-form" type="submit" className="gs-btn gs-btn--primary co-cta" disabled={busy || gateways.length === 0}>{busy ? <><Loader2 size={17} className="co-spin" /> Starting payment…</> : selected ? <>Pay {money(total, currency)} <ArrowRight size={17} /></> : <>Choose a payment method</>}</button>
       : null;
 
   const summary = (
@@ -429,7 +429,7 @@ export function CheckoutPage() {
             {couponOpen ? (
               <form className="co-coupon" onSubmit={e => { e.preventDefault(); if (coupon.trim()) void applyCoupon(coupon.trim()); }}>
                 <input value={coupon} onChange={e => setCoupon(e.target.value)} placeholder="Discount code" aria-label="Discount code" autoFocus />
-                <button type="submit" className="lb-btn lb-btn--ghost">Apply</button>
+                <button type="submit" className="gs-btn gs-btn--ghost">Apply</button>
               </form>
             ) : (
               <button type="button" className="co-link" onClick={() => setCouponOpen(true)}>Add a discount code</button>

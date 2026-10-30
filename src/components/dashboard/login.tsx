@@ -62,7 +62,7 @@ export function PortalLogin({ onSignedIn }: { onSignedIn: () => void }) {
               <input type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </label>
             {error && <p className="dash-error" role="alert">{error}</p>}
-            <button className="lb-btn lb-btn--primary dash-login__submit" type="submit" disabled={busy}>{busy ? "Sending…" : <>Send code <ArrowRight size={16} /></>}</button>
+            <button className="gs-btn gs-btn--primary dash-login__submit" type="submit" disabled={busy}>{busy ? "Sending…" : <>Send code <ArrowRight size={16} /></>}</button>
           </form>
         ) : (
           <form onSubmit={verify} noValidate>
@@ -77,7 +77,7 @@ export function PortalLogin({ onSignedIn }: { onSignedIn: () => void }) {
               <span>Keep me signed in for 30 days</span>
             </label>
             {error && <p className="dash-error" role="alert">{error}</p>}
-            <button className="lb-btn lb-btn--primary dash-login__submit" type="submit" disabled={busy}>{busy ? "Verifying…" : <>Sign in <ArrowRight size={16} /></>}</button>
+            <button className="gs-btn gs-btn--primary dash-login__submit" type="submit" disabled={busy}>{busy ? "Verifying…" : <>Sign in <ArrowRight size={16} /></>}</button>
             <div className="dash-login__links">
               <button type="button" onClick={() => { setStep("email"); setError(null); }}><ArrowLeft size={14} /> Use a different email</button>
               <button type="button" onClick={() => sendCode()} disabled={busy || cooldown > 0}>{cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}</button>

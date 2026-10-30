@@ -73,7 +73,7 @@ function Loading({ label = "Loading…" }: { label?: string }) {
 }
 
 function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
-  return <div className="dash-errorbox" role="alert"><p>{message}</p>{onRetry && <button type="button" className="lb-btn lb-btn--ghost" onClick={onRetry}><RotateCw size={14} /> Try again</button>}</div>;
+  return <div className="dash-errorbox" role="alert"><p>{message}</p>{onRetry && <button type="button" className="gs-btn gs-btn--ghost" onClick={onRetry}><RotateCw size={14} /> Try again</button>}</div>;
 }
 
 export function CustomerDashboard() {
@@ -132,10 +132,10 @@ export function CustomerDashboard() {
   const tab = view.name === "order" || view.name === "orders" ? "orders" : view.name === "home" ? "home" : "support";
 
   return (
-    <main className="lb dash">
+    <main className="gs dash">
       <SiteBackground />
       <header className="dash-top">
-        <Link className="lb-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
+        <Link className="gs-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
         {phase === "app" && (
           <nav className="dash-tabs" aria-label="Account">
             <button type="button" aria-current={tab === "home" ? "page" : undefined} onClick={() => go({ name: "home" })}><Home size={15} /> Home</button>
@@ -225,7 +225,7 @@ function HomeView({ me, dash, orders, go, onSignOut }: { me: HeadlessCustomerMe 
               </div>
               <div className="dash-latest__foot">
                 <span className={toneClass((latestDelivery ?? orderStatus(latest.status)).tone)}>{(latestDelivery ?? orderStatus(latest.status)).label}</span>
-                <button type="button" className="lb-btn lb-btn--ghost" onClick={() => go({ name: "order", id: latest.uniqid })}>View order <ArrowRight size={15} /></button>
+                <button type="button" className="gs-btn gs-btn--ghost" onClick={() => go({ name: "order", id: latest.uniqid })}>View order <ArrowRight size={15} /></button>
               </div>
             </div>
           ) : (
@@ -233,7 +233,7 @@ function HomeView({ me, dash, orders, go, onSignOut }: { me: HeadlessCustomerMe 
               <Package size={26} />
               <h2>No orders yet</h2>
               <p>When you buy boosts with this email, your orders show up here.</p>
-              <Link className="lb-btn lb-btn--primary" href="/products">Browse packages <ArrowRight size={15} /></Link>
+              <Link className="gs-btn gs-btn--primary" href="/products">Browse packages <ArrowRight size={15} /></Link>
             </div>
           )}
 
@@ -295,7 +295,7 @@ function OrdersView({ initial, go }: { initial: HeadlessCustomerOrderSummary[] |
         <div><h1>Orders</h1><p>Every order placed with your email.</p></div>
         <form className="dash-search" onSubmit={e => { e.preventDefault(); setPage(1); setQuery(search.trim()); }}>
           <input type="search" placeholder="Search by order ID" aria-label="Search orders by order ID" value={search} onChange={e => setSearch(e.target.value)} />
-          <button type="submit" className="lb-btn lb-btn--ghost">Search</button>
+          <button type="submit" className="gs-btn gs-btn--ghost">Search</button>
         </form>
       </div>
       <div className="dash-card dash-table-card">
@@ -304,9 +304,9 @@ function OrdersView({ initial, go }: { initial: HeadlessCustomerOrderSummary[] |
         ) : <OrderTable orders={data.invoices} go={go} />}
         {data && (page > 1 || data.hasMore) && (
           <div className="dash-pager">
-            <button type="button" className="lb-btn lb-btn--ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}><ArrowLeft size={14} /> Previous</button>
+            <button type="button" className="gs-btn gs-btn--ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}><ArrowLeft size={14} /> Previous</button>
             <span>Page {page}</span>
-            <button type="button" className="lb-btn lb-btn--ghost" disabled={!data.hasMore} onClick={() => setPage(p => p + 1)}>Next <ArrowRight size={14} /></button>
+            <button type="button" className="gs-btn gs-btn--ghost" disabled={!data.hasMore} onClick={() => setPage(p => p + 1)}>Next <ArrowRight size={14} /></button>
           </div>
         )}
       </div>
@@ -431,13 +431,13 @@ function OrderDetail({ id, go, onAuthLost }: { id: string; go: (v: View) => void
                 <div className="dash-sum__total"><dt>Total</dt><dd>{formatMoney(order.total, order.currency)}</dd></div>
                 {order.currentPayment && <div><dt>Paid with</dt><dd>{order.currentPayment.displayName ?? order.currentPayment.gateway}</dd></div>}
               </dl>
-              {isPaid(order.status) && <button type="button" className="lb-btn lb-btn--ghost dash-full" onClick={downloadPdf} disabled={pdfBusy}><Download size={15} /> {pdfBusy ? "Preparing…" : "Download invoice"}</button>}
+              {isPaid(order.status) && <button type="button" className="gs-btn gs-btn--ghost dash-full" onClick={downloadPdf} disabled={pdfBusy}><Download size={15} /> {pdfBusy ? "Preparing…" : "Download invoice"}</button>}
             </div>
             <div className="dash-card dash-help">
               <h2 className="dash-card__title">Need help with this order?</h2>
               <p>Open a ticket and we'll reply here and by email.</p>
-              <button type="button" className="lb-btn lb-btn--primary dash-full" onClick={() => go({ name: "new-ticket", invoiceId: order.uniqid })}><MessageSquare size={15} /> Get help</button>
-              <a className="lb-btn lb-btn--discord dash-full" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={15} /> Ask on Discord</a>
+              <button type="button" className="gs-btn gs-btn--primary dash-full" onClick={() => go({ name: "new-ticket", invoiceId: order.uniqid })}><MessageSquare size={15} /> Get help</button>
+              <a className="gs-btn gs-btn--discord dash-full" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={15} /> Ask on Discord</a>
             </div>
           </aside>
         </div>
@@ -454,11 +454,11 @@ function SupportView({ dash, go }: { dash: PortalDashboard | null; go: (v: View)
     <>
       <div className="dash-pagehead">
         <div><h1>Support</h1><p>Questions about an order? Open a ticket — replies show up here and by email.</p></div>
-        <button type="button" className="lb-btn lb-btn--primary" onClick={() => go({ name: "new-ticket" })}><Plus size={15} /> New ticket</button>
+        <button type="button" className="gs-btn gs-btn--primary" onClick={() => go({ name: "new-ticket" })}><Plus size={15} /> New ticket</button>
       </div>
       <div className="dash-card dash-table-card">
         {tickets.length === 0 ? (
-          <div className="dash-empty dash-empty--flat"><LifeBuoy size={24} /><p>No tickets yet.</p><a className="lb-btn lb-btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={15} /> Or reach us on Discord</a></div>
+          <div className="dash-empty dash-empty--flat"><LifeBuoy size={24} /><p>No tickets yet.</p><a className="gs-btn gs-btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={15} /> Or reach us on Discord</a></div>
         ) : (
           <div className="dash-tickets">
             {tickets.map(t => {
@@ -513,7 +513,7 @@ function NewTicket({ orders, invoiceId, go, onCreated }: { orders: HeadlessCusto
         </label>
         <label className="dash-field"><span>Message</span><textarea value={message} onChange={e => setMessage(e.target.value)} rows={6} placeholder="Tell us what's going on. Include your server invite link if the problem is with delivery." required /></label>
         {error && <p className="dash-error" role="alert">{error}</p>}
-        <button type="submit" className="lb-btn lb-btn--primary" disabled={busy}><Send size={15} /> {busy ? "Sending…" : "Send ticket"}</button>
+        <button type="submit" className="gs-btn gs-btn--primary" disabled={busy}><Send size={15} /> {busy ? "Sending…" : "Send ticket"}</button>
       </form>
     </>
   );
@@ -565,7 +565,7 @@ function TicketView({ id, go, onAuthLost }: { id: string; go: (v: View) => void;
             <form className="dash-reply" onSubmit={send}>
               <label className="dash-field"><span>Reply</span><textarea value={reply} onChange={e => setReply(e.target.value)} rows={3} placeholder="Write a reply…" /></label>
               {error && <p className="dash-error" role="alert">{error}</p>}
-              <button type="submit" className="lb-btn lb-btn--primary" disabled={busy || !reply.trim()}><Send size={15} /> {busy ? "Sending…" : "Send reply"}</button>
+              <button type="submit" className="gs-btn gs-btn--primary" disabled={busy || !reply.trim()}><Send size={15} /> {busy ? "Sending…" : "Send reply"}</button>
             </form>
           )}
         </div>

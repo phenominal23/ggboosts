@@ -26,7 +26,7 @@ export function GuidesBrowser() {
         </nav>
       )}
 
-      <section className="lb-section lb-section--tight">
+      <section className="gs-section gs-section--tight">
         {words.length ? (
           <div className="kb-results">
             <div className="kb-section">

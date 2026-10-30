@@ -7,7 +7,6 @@ import Script from "next/script";
 import type { Product } from "@shoppexio/storefront";
 import { ArrowRight, BookOpen, ChevronDown, Gem as GemIcon, Layers, Link2, Menu, Plus, UserRound, Users, X } from "lucide-react";
 import { GGMark } from "@/components/gg-navigation";
-import { Gem } from "@/components/home/gem";
 import { PaymentLogo } from "@/components/home/payment-logos";
 import { useReviews } from "@/lib/use-reviews";
 import { getBoostOffers } from "@/lib/boost-offers";
@@ -67,7 +66,7 @@ export function ShoppexEmbed({ enabled }: { enabled: boolean }) {
 }
 
 export function SiteBackground() {
-  return <div className="lb-bg" aria-hidden="true"><i className="lb-bg__a" /><i className="lb-bg__b" /><i className="lb-bg__grid" /></div>;
+  return <div className="gs-bg" aria-hidden="true"><i className="gs-bg__a" /><i className="gs-bg__b" /><i className="gs-bg__grid" /></div>;
 }
 
 export function Nav({ active }: { active?: "products" | "guides" }) {
@@ -88,16 +87,16 @@ export function Nav({ active }: { active?: "products" | "guides" }) {
     { href: getCustomerPortalHref(), label: "My Orders" },
   ];
   return (
-    <header className={`lb-nav ${scrolled ? "is-scrolled" : ""} ${open ? "is-open" : ""}`}>
-      <Link className="lb-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
-      <nav className="lb-nav__links" aria-label="Main">
+    <header className={`gs-nav ${scrolled ? "is-scrolled" : ""} ${open ? "is-open" : ""}`}>
+      <Link className="gs-brand" href="/" aria-label={`${site.name} home`}><GGMark /><span>GG<b>Boosts</b></span></Link>
+      <nav className="gs-nav__links" aria-label="Main">
         {links.map(l => l.key === "guides" ? <GuidesMenu key={l.label} active={active === "guides"} /> : <a key={l.label} href={l.href} className={l.key && l.key === active ? "is-active" : ""} aria-current={l.key && l.key === active ? "page" : undefined}>{l.label}</a>)}
       </nav>
-      <a className="lb-btn lb-btn--discord lb-nav__cta" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord</a>
-      <button className="lb-nav__toggle" type="button" aria-expanded={open} aria-controls="lb-mobile-nav" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20} /> : <Menu size={20} />}</button>
-      <nav id="lb-mobile-nav" className="lb-nav__mobile" hidden={!open} aria-label="Mobile">
+      <a className="gs-btn gs-btn--discord gs-nav__cta" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord</a>
+      <button className="gs-nav__toggle" type="button" aria-expanded={open} aria-controls="gs-mobile-nav" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(!open)}>{open ? <X size={20} /> : <Menu size={20} />}</button>
+      <nav id="gs-mobile-nav" className="gs-nav__mobile" hidden={!open} aria-label="Mobile">
         {links.map(l => <a key={l.label} href={l.href} onClick={() => setOpen(false)}>{l.label}</a>)}
-        <a className="lb-btn lb-btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Join our Discord</a>
+        <a className="gs-btn gs-btn--discord" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Join our Discord</a>
       </nav>
     </header>
   );
@@ -114,24 +113,24 @@ const menuIcons: Record<string, typeof Plus> = {
 
 function GuidesMenu({ active }: { active: boolean }) {
   return (
-    <div className="lb-dd">
-      <Link href="/guides" className={`lb-dd__trigger ${active ? "is-active" : ""}`} aria-haspopup="true">Guides <ChevronDown size={14} /></Link>
-      <div className="lb-dd__panel">
-        <span className="lb-dd__label">Guides</span>
+    <div className="gs-dd">
+      <Link href="/guides" className={`gs-dd__trigger ${active ? "is-active" : ""}`} aria-haspopup="true">Guides <ChevronDown size={14} /></Link>
+      <div className="gs-dd__panel">
+        <span className="gs-dd__label">Guides</span>
         <ul>
           {menuGuides.map(m => {
             const Icon = menuIcons[m.slug] ?? BookOpen;
             return (
               <li key={m.slug}>
                 <Link href={`/guides/${m.slug}`}>
-                  <span className="lb-dd__icon"><Icon size={17} /></span>
+                  <span className="gs-dd__icon"><Icon size={17} /></span>
                   <span><strong>{m.label}</strong><small>{m.hint}</small></span>
                 </Link>
               </li>
             );
           })}
         </ul>
-        <Link href="/guides" className="lb-dd__all">Browse All Guides <ArrowRight size={15} /></Link>
+        <Link href="/guides" className="gs-dd__all">Browse All Guides <ArrowRight size={15} /></Link>
       </div>
     </div>
   );
@@ -140,40 +139,50 @@ function GuidesMenu({ active }: { active: boolean }) {
 export function FaqSection({ items, title, sub, id = "faq" }: { items: [string, string][]; title: React.ReactNode; sub?: string; id?: string }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <section className="lb-section lb-faq" id={id} data-nav-section>
-      <header className="lb-head" data-reveal>
-        <span className="lb-eyebrow">FAQ</span>
-        <h2>{title}</h2>
-        {sub && <p>{sub}</p>}
-      </header>
-      <div className="lb-faq__list" data-reveal>
-        {items.map(([q, a], i) => (
-          <div key={q} className={`lb-faq__item ${open === i ? "is-open" : ""}`}>
-            <h3><button type="button" id={`${id}-q-${i}`} aria-expanded={open === i} aria-controls={`${id}-a-${i}`} onClick={() => setOpen(open === i ? null : i)}>{q}<span className="lb-faq__icon"><Plus size={16} /></span></button></h3>
-            <div className="lb-faq__answer" id={`${id}-a-${i}`} role="region" aria-labelledby={`${id}-q-${i}`}><div><p>{a}</p></div></div>
-          </div>
-        ))}
+    <section className="gs-section gs-faq" id={id} data-nav-section>
+      <div className="faq2">
+        <header className="faq2__head" data-reveal>
+          <span className="gs-eyebrow">FAQ</span>
+          <h2>{title}</h2>
+          {sub && <p>{sub}</p>}
+          <a className="faq2__help" href={site.supportUrl} target="_blank" rel="noreferrer">
+            <span className="faq2__help-ico"><DiscordIcon size={20} /></span>
+            <span><strong>Still stuck?</strong><small>Open a ticket in our Discord — a real person answers.</small></span>
+            <ArrowRight size={16} />
+          </a>
+        </header>
+        <div className="gs-faq__list" data-reveal>
+          {items.map(([q, a], i) => (
+            <div key={q} className={`gs-faq__item ${open === i ? "is-open" : ""}`}>
+              <h3><button type="button" id={`${id}-q-${i}`} aria-expanded={open === i} aria-controls={`${id}-a-${i}`} onClick={() => setOpen(open === i ? null : i)}>{q}<span className="gs-faq__icon"><Plus size={16} /></span></button></h3>
+              <div className="gs-faq__answer" id={`${id}-a-${i}`} role="region" aria-labelledby={`${id}-q-${i}`}><div><p>{a}</p></div></div>
+            </div>
+          ))}
+        </div>
       </div>
-      <p className="lb-faq__more" data-reveal>Still have questions? <a href={site.supportUrl} target="_blank" rel="noreferrer">Join our Discord →</a></p>
     </section>
   );
 }
 
-// Horizontal call-to-action card with the gem on the right (Products page).
+// Call-to-action shown as a Discord-style server invite (Products and category pages).
 export function CtaBanner({ eyebrow, title, body, href, label = "Boost My Server" }: { eyebrow: string; title: React.ReactNode; body: string; href: string; label?: string }) {
   return (
-    <section className="lb-cta-banner" data-reveal>
-      <div>
-        <span className="lb-eyebrow">{eyebrow}</span>
+    <section className="invite invite--page" data-reveal>
+      <div className="invite__copy">
+        <span className="gs-eyebrow">{eyebrow}</span>
         <h2>{title}</h2>
         <p>{body}</p>
-        <div className="lb-row">
-          <a className="lb-btn lb-btn--primary" href={href}>{label} <ArrowRight size={16} /></a>
-          <a className="lb-btn lb-btn--ghost" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={16} /> Discord Support</a>
-        </div>
-        <small>Not affiliated with or endorsed by Discord Inc. All trademarks belong to their respective owners.</small>
+        <small className="invite__legal">Not affiliated with or endorsed by Discord Inc. All trademarks belong to their respective owners.</small>
       </div>
-      <Gem size={240} />
+      <div className="invite__card">
+        <span className="invite__label">You&apos;ve been invited to level up</span>
+        <div className="invite__row">
+          <span className="invite__icon"><img src="/ggboosts-mark.svg" alt="" /></span>
+          <div><strong>Your Server</strong><p><i className="invite__dot invite__dot--on" /> Level 3 <i className="invite__dot" /> 14 boosts</p></div>
+        </div>
+        <a className="gs-btn gs-btn--primary invite__btn" href={href}>{label}</a>
+        <a className="invite__help" href={site.supportUrl} target="_blank" rel="noreferrer"><DiscordIcon size={15} /> Questions? Ask in our Discord</a>
+      </div>
     </section>
   );
 }
@@ -185,17 +194,17 @@ const footerGuides = [
 
 export function Footer() {
   return (
-    <footer className="lb-footer">
-      <div className="lb-pay-marquee" aria-label="Accepted payment methods">
+    <footer className="gs-footer">
+      <div className="gs-pay-marquee" aria-label="Accepted payment methods">
         {/* 4 identical copies: wide enough for any screen, and the loop moves exactly one copy so the reset is invisible. */}
-        <div className="lb-pay-marquee__track">{[0, 1, 2, 3].flatMap(copy => paymentLogos.map(p => <span key={`${copy}-${p}`} aria-hidden={copy > 0}><PaymentLogo name={p} /></span>))}</div>
+        <div className="gs-pay-marquee__track">{[0, 1, 2, 3].flatMap(copy => paymentLogos.map(p => <span key={`${copy}-${p}`} aria-hidden={copy > 0}><PaymentLogo name={p} /></span>))}</div>
       </div>
-      <div className="lb-footer__grid">
-        <div className="lb-footer__brand">
-          <Link className="lb-brand" href="/"><GGMark /><span>GG<b>Boosts</b></span></Link>
+      <div className="gs-footer__grid">
+        <div className="gs-footer__brand">
+          <Link className="gs-brand" href="/"><GGMark /><span>GG<b>Boosts</b></span></Link>
           <p>GGBoosts is your store for Discord server boosts, Nitro, members and aged accounts. One-time payments, no Discord login for boosts, and real support in our Discord.</p>
-          <nav className="lb-footer__quick" aria-label="On this site"><a href="/#features">Features</a><a href="/#how-it-works">How It Works</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav>
-          <div className="lb-footer__social"><a href={site.supportUrl} target="_blank" rel="noreferrer" aria-label="Join our Discord"><DiscordIcon size={17} /></a></div>
+          <nav className="gs-footer__quick" aria-label="On this site"><a href="/#features">Features</a><a href="/#how-it-works">How It Works</a><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav>
+          <div className="gs-footer__social"><a href={site.supportUrl} target="_blank" rel="noreferrer" aria-label="Join our Discord"><DiscordIcon size={17} /></a></div>
         </div>
         <nav aria-label="Shop">
           <h4>Shop</h4>
@@ -210,7 +219,7 @@ export function Footer() {
         <nav aria-label="Guides">
           <h4>Guides</h4>
           {footerGuides.map(g => <Link key={g.slug} href={`/guides/${g.slug}`}>{g.label}</Link>)}
-          <Link className="lb-footer__all" href="/guides">All Guides <ArrowRight size={14} /></Link>
+          <Link className="gs-footer__all" href="/guides">All Guides <ArrowRight size={14} /></Link>
         </nav>
         <nav aria-label="Company">
           <h4>Company</h4>
@@ -221,7 +230,7 @@ export function Footer() {
           <Link href="/refund-policy">Refund Policy</Link>
         </nav>
       </div>
-      <div className="lb-footer__legal">
+      <div className="gs-footer__legal">
         <span>© {new Date().getFullYear()} {site.name}. All rights reserved.</span>
         <span>Not affiliated with or endorsed by Discord Inc.</span>
       </div>

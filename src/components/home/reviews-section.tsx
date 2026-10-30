@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowRight, ExternalLink, Hash, Plus, Star } from "lucide-react";
 import { trustpilotUrl } from "@/lib/reviews";
 import { useReviews } from "@/lib/use-reviews";
@@ -13,7 +14,9 @@ function colorFor(name: string) {
   return avatarColors[h % avatarColors.length];
 }
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, src }: { name: string; src?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (src && !failed) return <img className="rv-avatar rv-avatar--img" src={src} alt="" aria-hidden="true" loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
   return <span className="rv-avatar" style={{ background: colorFor(name) }} aria-hidden="true">{name.slice(0, 1).toUpperCase()}</span>;
 }
 
@@ -30,18 +33,18 @@ export function ReviewsSection() {
   const marquee = [...list, ...list, ...list];
 
   return (
-    <section className="lb-section lb-reviews" id="reviews" data-nav-section>
-      {examples && <p className="lb-demo-flag lb-demo-flag--block">Example reviews — visible only in local development. Add real reviews in src/lib/reviews.ts; this section is hidden on the live site until you do.</p>}
+    <section className="gs-section gs-reviews" id="reviews" data-nav-section>
+      {examples && <p className="gs-demo-flag gs-demo-flag--block">Example reviews — visible only in local development. Add real reviews in src/lib/reviews.ts; this section is hidden on the live site until you do.</p>}
       <div className="rv-split">
         <div className="rv-intro" data-reveal>
-          <span className="lb-eyebrow">{reviewsCopy.eyebrow}</span>
+          <span className="gs-eyebrow">{reviewsCopy.eyebrow}</span>
           <h2>{reviewsCopy.titleBefore} <em>{reviewsCopy.titleAccent}</em></h2>
           <p>{reviewsCopy.body}</p>
           <div className="rv-score">
             <strong>{avg.toFixed(1)}</strong>
             <div><Stars rating={Math.round(avg)} size={22} /><span>out of 5 · {list.length} review{list.length === 1 ? "" : "s"}</span></div>
           </div>
-          <a className="lb-btn lb-btn--primary" href={site.supportUrl} target="_blank" rel="noreferrer">See all reviews <ArrowRight size={16} /></a>
+          <a className="gs-btn gs-btn--primary" href={site.supportUrl} target="_blank" rel="noreferrer">See all reviews <ArrowRight size={16} /></a>
           {trustpilotUrl && <a className="rv-tp" href={trustpilotUrl} target="_blank" rel="noreferrer">View reviews on Trustpilot <ExternalLink size={12} /></a>}
         </div>
         <div className="rv-channel" data-reveal>
@@ -50,7 +53,7 @@ export function ReviewsSection() {
             <ul className="rv-channel__list" style={{ animationDuration: `${list.length * 4}s` }}>
               {feed.map((r, i) => (
                 <li key={i} aria-hidden={i >= list.length}>
-                  <Avatar name={r.name} />
+                  <Avatar name={r.name} src={r.avatar} />
                   <div><p className="rv-name"><b style={{ color: colorFor(r.name) }}>{r.name}</b><Stars rating={r.rating} />{r.product && <span className="rv-product">{r.product}</span>}</p><p>{r.quote}</p></div>
                 </li>
               ))}
@@ -64,7 +67,7 @@ export function ReviewsSection() {
         <div className="rv-marquee__track" style={{ animationDuration: `${list.length * 6}s` }}>
           {marquee.map((r, i) => (
             <figure key={i} className="rv-mini">
-              <div className="rv-mini__head"><Avatar name={r.name} /><div><b>{r.name}</b><Stars rating={r.rating} size={10} /></div></div>
+              <div className="rv-mini__head"><Avatar name={r.name} src={r.avatar} /><div><b>{r.name}</b><Stars rating={r.rating} size={10} /></div></div>
               <blockquote>“{r.quote}”</blockquote>
             </figure>
           ))}

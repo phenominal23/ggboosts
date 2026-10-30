@@ -81,7 +81,7 @@ export function SquarePanel({ view, payment, email, onResult }: PanelProps) {
       <div id="ggb-square-card" className="co-square" />
       {!ready && !error && <p className="co-muted co-inline"><Loader2 size={15} className="co-spin" /> Loading secure card form…</p>}
       {error && <p className="co-error" role="alert">{error}</p>}
-      <button type="button" className="lb-btn lb-btn--primary lb-btn--lg co-full" disabled={!ready || busy} onClick={pay}>
+      <button type="button" className="gs-btn gs-btn--primary gs-btn--lg co-full" disabled={!ready || busy} onClick={pay}>
         {busy ? <><Loader2 size={17} className="co-spin" /> Processing…</> : <>Pay {money(view.amount, view.currency)}</>}
       </button>
     </div>
@@ -151,7 +151,7 @@ export function ManualPanel({ payment }: { payment: Extract<CheckoutPaymentSessi
     <div className="co-pay">
       <h3>Payment instructions</h3>
       {payment.instructions && <p className="co-pre">{payment.instructions}</p>}
-      {payment.redirect_url && <a className="lb-btn lb-btn--primary co-full" href={payment.redirect_url} target="_blank" rel="noreferrer">Continue to payment <ExternalLink size={15} /></a>}
+      {payment.redirect_url && <a className="gs-btn gs-btn--primary co-full" href={payment.redirect_url} target="_blank" rel="noreferrer">Continue to payment <ExternalLink size={15} /></a>}
       <div className="co-waiting"><Loader2 size={16} className="co-spin" /><span>Waiting for confirmation…</span></div>
     </div>
   );

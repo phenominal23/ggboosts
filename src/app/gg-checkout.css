@@ -1,7 +1,7 @@
-/* ---- Custom checkout (/checkout) — builds on the .lb tokens in gg-home.css ---- */
+/* ---- Custom checkout (/checkout) — builds on the .gs tokens in gg-home.css ---- */
 .co { min-height: 100vh; padding-bottom: 72px; }
 .co-top { position: sticky; top: 0; z-index: 40 !important; display: flex; align-items: center; gap: 18px; padding: 12px max(20px, calc((100% - 1100px) / 2)); border-bottom: 1px solid var(--line); background: #09090bdd; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-.co-top .lb-brand { font-size: 17px; }
+.co-top .gs-brand { font-size: 17px; }
 .co-top .gg-mark { width: 30px !important; height: 30px !important; }
 .co-top__secure { display: inline-flex; align-items: center; gap: 6px; color: var(--faint); font-size: 13px; font-weight: 500; }
 .co-top__back { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; color: var(--dim); font-size: 13.5px; font-weight: 600; transition: color .2s; }
@@ -16,8 +16,8 @@
 /* Cards */
 .co-card { min-width: 0; padding: 22px 24px; border: 1px solid var(--line); border-radius: 16px; background: #111114; }
 .co-card__head { margin-bottom: 18px; }
-.lb .co-card__head h2, .lb .co-sum__head h2, .lb .co-help h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 700; letter-spacing: -.01em; }
-.lb .co-card__head p, .lb .co-sum__head p, .lb .co-help p { margin: 4px 0 0 !important; color: var(--faint); font-size: 13px; line-height: 1.5; }
+.gs .co-card__head h2, .gs .co-sum__head h2, .gs .co-help h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 700; letter-spacing: -.01em; }
+.gs .co-card__head p, .gs .co-sum__head p, .gs .co-help p { margin: 4px 0 0 !important; color: var(--faint); font-size: 13px; line-height: 1.5; }
 .co-card__head--row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .co-link { color: var(--lime); font-size: 13px; font-weight: 600; white-space: nowrap; }
 .co-link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -44,8 +44,8 @@
 .co-field input::placeholder, .co-field textarea::placeholder, .co-coupon input::placeholder { color: #55555e; }
 .co-field input:focus, .co-field textarea:focus, .co-coupon input:focus { outline: none; border-color: #b8ff3c80; box-shadow: 0 0 0 3px #b8ff3c1a; }
 .co-field input[aria-invalid="true"], .co-field textarea[aria-invalid="true"] { border-color: #f8717180; }
-.lb .co-field em, .lb .co-err { display: block; color: #f87171; font-size: 12.5px; font-style: normal; font-weight: 500; }
-.lb .co-err { margin-top: 10px; }
+.gs .co-field em, .gs .co-err { display: block; color: #f87171; font-size: 12.5px; font-style: normal; font-weight: 500; }
+.gs .co-err { margin-top: 10px; }
 
 .co-howto { margin-top: 10px; }
 .co-howto__toggle { display: inline-flex; align-items: center; gap: 4px; color: var(--faint); font-size: 12.5px; font-weight: 500; }
@@ -117,7 +117,7 @@
 .co-sum__coupon .co-link:hover { color: var(--text); }
 .co-coupon { display: flex; gap: 8px; }
 .co-coupon input { height: 40px; }
-.co-coupon .lb-btn { min-height: 40px; padding: 0 16px; border-radius: 10px; font-size: 13.5px; }
+.co-coupon .gs-btn { min-height: 40px; padding: 0 16px; border-radius: 10px; font-size: 13.5px; }
 .co-sum__attrib { display: flex; justify-content: center; padding: 12px 22px 0; }
 .co-sum__secure { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 22px 0; color: var(--faint); font-size: 12px; }
 .co-sum__accept { margin: 18px 22px 0; padding: 14px 0 20px; border-top: 1px solid var(--line); }
@@ -170,7 +170,7 @@
 .co-state--ok { border-color: #b8ff3c40; box-shadow: 0 0 80px -30px var(--lime-glow); }
 .co-state h1 { font-family: var(--display); font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
 .co-state p { max-width: 420px; color: var(--dim); font-size: 15px; line-height: 1.6; }
-.co-state .lb-btn { margin-top: 6px; }
+.co-state .gs-btn { margin-top: 6px; }
 .co-state__actions { justify-content: center; gap: 12px; }
 .co-done__id { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 10px; color: var(--faint); font-size: 13px; }
 .co-done__id code { color: var(--text); font-size: 13.5px; }
@@ -219,7 +219,7 @@
 /* Order card: quantity picker + product details */
 .co-card.co-order-wrap { padding: 0; }
 .co-order-wrap .co-order { flex-wrap: wrap; }
-.lb .co-order__text small.co-order__meta { color: var(--faint); letter-spacing: .04em; }
+.gs .co-order__text small.co-order__meta { color: var(--faint); letter-spacing: .04em; }
 .co-qty { display: grid; grid-template-columns: 38px 76px 38px; margin-left: auto; border: 1px solid var(--line-2); border-radius: 12px; background: #0c0c0f; overflow: hidden; }
 .co-qty button { display: grid; place-items: center; height: 40px; color: var(--text); transition: background .2s, color .2s; }
 .co-qty button:hover:not(:disabled) { background: #b8ff3c14; color: var(--lime); }
@@ -241,7 +241,7 @@
 .co-desc ul, .co-desc ol { padding-left: 20px; } .co-desc ul { list-style: disc; } .co-desc ol { list-style: decimal; }
 .co-desc h3, .co-desc h4 { color: var(--text); font-size: 15px; font-weight: 700; }
 .co-desc strong, .co-desc b { color: var(--text); }
-.lb .co-desc a { color: var(--lime); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
+.gs .co-desc a { color: var(--lime); text-decoration: underline; text-underline-offset: 2px; word-break: break-all; }
 @media (max-width: 600px) {
   .co-qty { order: 3; margin-left: 62px; }
   .co-qty + .co-order__price { order: 4; margin-left: auto; }

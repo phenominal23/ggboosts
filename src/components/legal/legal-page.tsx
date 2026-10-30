@@ -6,16 +6,16 @@ import { legal } from "@/lib/site-content";
 
 export function LegalPage({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main className="lb">
+    <main className="gs">
       <SiteBackground />
       <Nav />
-      <header className="lb-page-head">
-        <nav className="lb-crumbs lb-anim" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><span aria-current="page">{title}</span></nav>
-        <span className="lb-eyebrow lb-anim">Legal</span>
-        <h1 className="lb-anim" style={{ animationDelay: ".08s" }}>{title}</h1>
-        <p className="lb-anim" style={{ animationDelay: ".14s" }}>Last updated {legal.lastUpdated}</p>
+      <header className="gs-page-head">
+        <nav className="gs-crumbs gs-anim" aria-label="Breadcrumb"><Link href="/">Home</Link><span>/</span><span aria-current="page">{title}</span></nav>
+        <span className="gs-eyebrow gs-anim">Legal</span>
+        <h1 className="gs-anim" style={{ animationDelay: ".08s" }}>{title}</h1>
+        <p className="gs-anim" style={{ animationDelay: ".14s" }}>Last updated {legal.lastUpdated}</p>
       </header>
-      <article className="lb-legal">{children}</article>
+      <article className="gs-legal">{children}</article>
       <Footer />
     </main>
   );

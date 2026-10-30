@@ -7,46 +7,48 @@ export const site = {
 };
 
 export const hero = {
-  // Small pill above the headline. Swap for a real number once you have one, e.g. "Trusted by 500+ server owners".
-  pill: "Lifetime boost plans now available",
-  titleTop: "Discord Server Boosts,",
-  titleAccent: "Without the Nitro Price.",
-  lead: "Automated delivery straight to your server.",
-  body: "No Discord login required, transparent pricing, and a replacement warranty on every order.",
+  chip: "Boosts usually land in under a minute",
+  titleTop: "Take your server to",
+  titleAccent: "Level 3.",
+  lead: "Discord server boosts, Nitro, members and aged accounts — delivered automatically.",
   primaryCta: "Boost My Server",
-  secondaryCta: "Discord Support",
+  secondaryCta: "Join our Discord",
+  trust: ["No Discord login", "Warranty on boost plans", "Card · Cash App · Crypto"],
 };
 
-// Hero stat row. Only use numbers you can prove — invented stats are a chargeback and trust risk.
-export const stats = [
-  { value: "24/7", label: "Discord support" },
-  { value: "0", label: "Logins required" },
-  { value: "4", label: "Plan lengths" },
-  { value: "100%", label: "Warranty coverage" },
-];
+// Boost levels section. Numbers match the boost-levels guide (src/lib/guides.ts) — keep them in sync.
+export const levels = {
+  eyebrow: "Server levels",
+  titleBefore: "What your server",
+  titleAccent: "unlocks",
+  body: "Perks stack as you climb — Level 3 includes everything below it.",
+  tiers: [
+    { level: 1, boosts: 2, perks: ["100 emoji slots", "128 kbps voice audio", "Animated server icon", "Custom invite background", "720p 60fps Go Live"] },
+    { level: 2, boosts: 7, perks: ["150 emoji slots", "256 kbps voice audio", "Server banner", "50 MB uploads for everyone", "Custom role icons"] },
+    { level: 3, boosts: 14, perks: ["250 emoji slots", "384 kbps voice audio", "Animated server banner", "100 MB uploads for everyone", "Vanity URL — discord.gg/yourname"] },
+  ],
+};
 
 export const features = {
   eyebrow: "Why GGBoosts",
-  titleTop: "Everything you need,",
-  titleAccent: "nothing you don't.",
-  body: "Discord boosting built on automation, clear pricing, and real human support.",
   items: [
-    { title: "Automated Delivery", text: "No queues and no manual steps. Your order is sent for delivery the moment payment clears." },
-    { title: "No Discord Login Required", text: "We never ask for your password, email or token. Your server invite link is all we need." },
-    { title: "Real Discord Support", text: "Questions before or after you buy? Open a ticket in our Discord and a real person answers." },
-    { title: "Replacement Warranty", text: "If a boost drops before your plan ends, it's replaced at no extra cost." },
+    { title: "Automated delivery", text: "Your order is sent for delivery the moment payment clears. No queues." },
+    { title: "No Discord login", text: "We never ask for your password, email or token — just a server invite." },
+    { title: "Real support", text: "Open a ticket in our Discord and a real person answers." },
+    { title: "Replacement warranty", text: "If a boost drops before your plan ends, it's replaced free." },
   ],
 };
 
 export const howItWorks = {
   eyebrow: "How it works",
-  titleBefore: "How",
-  titleAfter: "Works",
-  body: "Choose your package, pay securely, and watch your boosts land.",
+  title: "Three messages",
+  titleAccent: "and you're boosted",
+  body: "Ordering takes about a minute. Here's the whole thing.",
+  question: "how do I get my server boosted?",
   steps: [
-    { title: "Choose Your Package", text: "Pick how many boosts you need and how long you want them, then head to checkout in under a minute." },
-    { title: "Pay With Confidence", text: "Checkout is handled by Shoppex, so your payment details never touch our servers." },
-    { title: "Boosts Land Automatically", text: "Once payment clears, delivery starts automatically. Watch your boost count climb — no tickets, no waiting around." },
+    { title: "Pick your boosts", text: "Choose 8, 14, 20 or 30 boosts and how long you want them — 1 month up to lifetime." },
+    { title: "Paste your invite & pay", text: "Drop in a permanent invite to your server and pay by card, Cash App or crypto. Checkout is handled securely by Shoppex." },
+    { title: "Watch them land", text: "Delivery starts automatically. Your boost count climbs within minutes — no tickets, no waiting around." },
   ],
 };
 
@@ -59,10 +61,10 @@ export const paymentOptions = [
 export const paymentLogos = ["Visa", "Mastercard", "Amex", "Apple Pay", "Google Pay", "Cash App", "Bitcoin", "Litecoin", "USDT"];
 
 export const pricing = {
-  eyebrow: "Pricing",
-  titleBefore: "Choose Your",
-  titleAccent: "Package",
-  body: "Pick the plan that fits your server and check out securely. Every order includes warranty coverage and Discord support.",
+  eyebrow: "Shop",
+  titleBefore: "Pick a channel,",
+  titleAccent: "pick a plan",
+  body: "One-time payments, nothing renews. Boost plans include warranty coverage and Discord support.",
 };
 
 export const reviewsCopy = {
@@ -92,10 +94,12 @@ export const faqs: [string, string][] = [
 ];
 
 export const finalCta = {
-  titleBefore: "Your server deserves",
-  titleAccent: "Level 3.",
-  body: "One-time payment. Automated delivery. Warranty included.",
-  cta: "Boost My Server",
+  invite: "You've been invited to level up",
+  server: "Your Server",
+  titleBefore: "Ready when",
+  titleAccent: "you are.",
+  body: "One-time payment. Automated delivery. Warranty on every boost plan.",
+  cta: "Accept — Boost My Server",
 };
 
 export const productsPage = {

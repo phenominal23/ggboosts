@@ -33,14 +33,14 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
   const symbol = formatted.replace(/[\d.,\s]/g, "");
 
   return (
-    <article className={`lb-card lb-item ${soldOut ? "is-soldout" : ""} ${featured ? "is-popular" : ""}`}>
-      {featured && <span className="lb-item__badge">Most popular</span>}
+    <article className={`gs-card gs-item ${soldOut ? "is-soldout" : ""} ${featured ? "is-popular" : ""}`}>
+      {featured && <span className="gs-item__badge">Most popular</span>}
       <header>
-        <span className="lb-card__icon"><Icon size={20} /></span>
+        <span className="gs-card__icon"><Icon size={20} /></span>
         <div><h3>{title}</h3>{sub && <span>{sub}</span>}</div>
       </header>
 
-      <div className="lb-card__price">
+      <div className="gs-card__price">
         <strong><sup>{symbol}</sup>{formatted.replace(symbol, "")}</strong>
         <span>{unit.one === "plan" ? "one-time payment" : `per ${unit.one}`}</span>
       </div>
@@ -48,8 +48,8 @@ export function ItemCard({ product, category, demo }: { product: Product; catego
       <ul>{perks.map(p => <li key={p}><Check size={14} /> {p}</li>)}</ul>
 
       {soldOut
-        ? <button className="lb-btn lb-btn--primary" type="button" disabled>Sold out</button>
-        : <Link className="lb-btn lb-btn--primary" href={href}>Buy now<ArrowRight size={16} /></Link>}
+        ? <button className="gs-btn gs-btn--primary" type="button" disabled>Sold out</button>
+        : <Link className="gs-btn gs-btn--primary" href={href}>Buy now<ArrowRight size={16} /></Link>}
     </article>
   );
 }
