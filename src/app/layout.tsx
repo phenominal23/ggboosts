@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import type { CSSProperties, ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
@@ -17,10 +17,10 @@ import "./gg-checkout.css";
 export const metadata: Metadata = {
   // Absolute base for canonical and share-image links.
   metadataBase: new URL(SITE_URL),
-  title: { default: "GGBoosts â€“ Cheap Discord Server Boosts | Level 3 for Less", template: "%s | GGBoosts" },
-  description: "Buy Discord server boosts — 8 to 30 boosts, 1 month to lifetime. No Discord login, warranty included. Plus members, Nitro and aged accounts.",
+  title: { default: "GGBoosts – Cheap Discord Server Boosts | Level 3 for Less", template: "%s | GGBoosts" },
+  description: "Buy Discord server boosts - 8 to 30 boosts, 1 month to lifetime. No Discord login, warranty included. Plus members, Nitro and aged accounts.",
   openGraph: {
-    title: "GGBoosts â€“ Cheap Discord Server Boosts",
+    title: "GGBoosts – Cheap Discord Server Boosts",
     description: "Level 3 for your server without the Nitro price. Automated delivery, warranty included, no Discord login required.",
     siteName: "GGBoosts",
     type: "website",
